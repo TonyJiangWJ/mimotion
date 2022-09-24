@@ -6,7 +6,7 @@ on:
   #pull_request:
   #  branches: [ main ]
   schedule:
-    - cron: '43 0,4,7,10,12,14 * * *'
+    - cron: '53 0,4,7,10,12,14 * * *'
   watch:
     types: started
   workflow_dispatch:
