@@ -65,13 +65,13 @@ def getBeijinTime():
     K = 1.0
     type = ""
     hea = {'User-Agent': 'Mozilla/5.0'}
-    url = r'http://time1909.beijing-time.org/time.asp'
+    url = r'https://apps.game.qq.com/CommArticle/app/reg/gdate.php'
     if open_get_weather == "True":
         getWeather()
     r = requests.get(url=url, headers=hea)
     if r.status_code == 200:
         result = r.text
-        pattern = re.compile('nhrs=(\\d+)')
+        pattern = re.compile('\\d{4}-\\d{2}-\\d{2} (\\d{2}):\\d{2}:\\d{2}')
         find = re.search(pattern, result)
         hour = find.group(1)
         min_ratio = max(math.ceil((int(hour) / 3) - 1), 0)
