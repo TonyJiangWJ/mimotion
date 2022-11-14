@@ -38,7 +38,8 @@
 编辑 **.github/workflows/run.yml**
 修改其中**cron**语句的判断时间为UTC时间，即**北京时间-8**，如北京时间8点为UTC时间0点，需要运行的时间-8就是UTC时间
 
-
+### 五、感谢列表
+本项目基于https://github.com/xunichanghuan/mimotion 项目修改，特此感谢
 
 ## 注意事项
 
