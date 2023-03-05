@@ -4,7 +4,7 @@
 [![GitHub stars](https://img.shields.io/github/stars/huangshihai/mimotion?style=flat-square)](https://github.com/huangshihai/mimotion/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues/huangshihai/mimotion?style=flat-square)](https://github.com/huangshihai/mimotion/issues)
 
-# 小米运动自动刷步数
+# 小米运动自动刷步数（支持邮箱登录）
 
 > 小米运动自动刷步数
 
@@ -15,13 +15,13 @@
 ### 二、设置账号密码
 > 添加名为  **USER**、**PWD**、**OPEN_GET_WEATHER**、**AREA**的变量: Settings-->Secrets-->New secret  
 
-| Secrets |  格式  |
-| -------- | ----- |
-| USER |   小米运动登录账号,仅支持小米运动账号对应的手机号,不支持小米账号|
-| PWD |   小米运动登录密码,仅支持小米运动账号对应的密码|
-| OPEN_GET_WEATHER |   开启根据地区天气情况降低步数**False**关闭,**True**开启|
-| AREA |   设置获取天气的地区（上面开启后必填）如：**北京**，当**OPEN_GET_WEATHER**为**False**时填写**NO**|
-| PAT |   此处**PAT**需要申请，值为github token，教程详见：https://www.jianshu.com/p/bb82b3ad1d11 ,需要repo和workflow权限,此项必填，避免git push的权限错误。 |
+| Secrets | 格式                                                                                                                |
+| -------- |-------------------------------------------------------------------------------------------------------------------|
+| USER | 小米运动登录账号,仅支持小米运动账号对应的手机号或邮箱,不支持小米账号                                                                               |
+| PWD | 小米运动登录密码,仅支持小米运动账号对应的密码                                                                                           |
+| OPEN_GET_WEATHER | 开启根据地区天气情况降低步数**False**关闭,**True**开启                                                                              |
+| AREA | 设置获取天气的地区（上面开启后必填）如：**北京**，当**OPEN_GET_WEATHER**为**False**时填写**NO**                                               |
+| PAT | 此处**PAT**需要申请，值为github token，教程详见：https://www.jianshu.com/p/bb82b3ad1d11 ,需要repo和workflow权限,此项必填，避免git push的权限错误。 |
 
 ### 三、自定义启动时间多账户(用不上请忽略)
 
