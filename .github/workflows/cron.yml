@@ -4,18 +4,31 @@ on:
     workflows: ["刷步数"]
     types:
       - completed
+  workflow_dispatch:
+
 jobs:
   repo-sync:
     runs-on: ubuntu-latest
     timeout-minutes: 3
-    if: github.event.workflow_run.conclusion == 'success'
+    if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v2
         with:
           token: ${{ secrets.PAT }} #此处PAT需要申请，教程详见：https://www.jianshu.com/p/bb82b3ad1d11,需要repo和workflow权限
       - name: random cron
         run: |
+          source cron_convert.sh
+          echo "trigger by: ${{ github.event_name }}" > cron_change_time
+          echo "current system time:" >> cron_change_time
+          TZ='UTC' date "+%y-%m-%d %H:%M:%S" | xargs -I {} echo "UTC: {}" >> cron_change_time
+          TZ='Asia/Shanghai' date "+%y-%m-%d %H:%M:%S" | xargs -I {} echo "Asia/Shanghai: {}" >> cron_change_time
+          current_cron=`cat .github/workflows/run.yml|grep cron|awk '{print substr($0, index($0,$3))}'`
+          echo "current cron:" >> cron_change_time
+          convert_utc_to_shanghai "$current_cron" >> cron_change_time
           sed -i -E "s/(- cron: ')[0-9]+( [^[:space:]]+ \* \* \*')/\1$(($RANDOM % 59))\2/g" .github/workflows/run.yml
+          current_cron=`cat .github/workflows/run.yml|grep cron|awk '{print substr($0, index($0,$3))}'`
+          echo "next cron:" >> cron_change_time
+          convert_utc_to_shanghai "$current_cron" >> cron_change_time
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add .
