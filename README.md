@@ -1,8 +1,8 @@
 # mimotion
-![ 刷步数](https://github.com/huangshihai/mimotion/actions/workflows/run.yml/badge.svg)
-[![GitHub forks](https://img.shields.io/github/forks/huangshihai/mimotion?style=flat-square)](https://github.com/huangsh/mimotion/network)
-[![GitHub stars](https://img.shields.io/github/stars/huangshihai/mimotion?style=flat-square)](https://github.com/huangshihai/mimotion/stargazers)
-[![GitHub issues](https://img.shields.io/github/issues/huangshihai/mimotion?style=flat-square)](https://github.com/huangshihai/mimotion/issues)
+![ 刷步数](https://github.com/tonyjiangwj/mimotion/actions/workflows/run.yml/badge.svg)
+[![GitHub forks](https://img.shields.io/github/forks/tonyjiangwj/mimotion?style=flat-square)](https://github.com/tonyjiangwj/mimotion/network)
+[![GitHub stars](https://img.shields.io/github/stars/tonyjiangwj/mimotion?style=flat-square)](https://github.com/tonyjiangwj/mimotion/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues/tonyjiangwj/mimotion?style=flat-square)](https://github.com/tonyjiangwj/mimotion/issues)
 
 # 小米运动自动刷步数（支持邮箱登录）
 
@@ -53,6 +53,6 @@
 
 5. 小米运动不会更新步数，只有关联的会同步！！！！！
 
-6. 请各位在使用时Fork[主分支](https://github.com/huangshihai/mimotion/)，防止出现不必要的bug.
+6. 请各位在使用时Fork[当前分支](https://github.com/tonyjiangwj/mimotion/)，防止出现不必要的bug.
 
 7. 请注意，账号不是 [小米账号]，而是 [小米运动] 的账号。
