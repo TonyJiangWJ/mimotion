@@ -44,8 +44,9 @@
 - 快捷跳转地址 [https://github.com/${你的github用户名}/mimotion/settings/secrets/actions](../../settings/secrets/actions)
 - 点击右侧的 `New repository secret` 即可添加Secret
 
-> 添加名为 **PAT** 的变量，值为第一步申请的token
-> 添加名为  **CONFIG** 的变量：
+#### 添加名为 **PAT** 的变量，值为第一步申请的token
+
+#### 添加名为 **CONFIG** 的变量
 
 - CONFIG的内容：
 
@@ -80,12 +81,12 @@
 
 - 1、编辑 **.github/workflows/run.yml** 中的cron表达式
   - cron表达式格式如下: `分 小时 日期 月份 年份`
-  - github actions中执行时间为UTC时间，即**北京时间-8**，如果需要每天`8，10，12，14，16`点执行，则设置cron为`0 0,2,4,6,8 * * *`
+  - github actions中执行时间为UTC时间，即**北京时间-8**，如果需要每天`8，10，12，14，16，22`点执行，则设置cron为`0 0,2,4,6,8,14 * * *`
 
   ```yaml
   on:
     schedule:
-      - cron: '50 0,4,7,10,12,14 * * *'
+      - cron: '0 0,2,4,6,8,14 * * *'
   ```
 
 - 2、添加名为 `CRON_HOURS` 的Variables变量 `Settings-->Secrets and variables-->Actions-->New repository variables` 注意不是Secret
