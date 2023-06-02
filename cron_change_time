@@ -1,3 +1,9 @@
-UTC: 23-06-02 04:25:25
-Asia/Shanghai: 23-06-02 12:25:25
-next - cron: 21 0,4,7,10,12,14 * * *
+current system time:
+UTC: 23-06-02 06:19:46
+Asia/Shanghai: 23-06-02 14:19:46
+current cron:
+UTC时间: '21
+北京时间: '21  * * *'
+next cron:
+UTC时间: '20
+北京时间: '20  * * *'
