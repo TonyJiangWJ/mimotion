@@ -1,10 +1,10 @@
-trigger by: workflow_dispatch
+trigger by: workflow_run
 current system time:
-UTC: 23-06-02 06:54:47
-Asia/Shanghai: 23-06-02 14:54:47
+UTC: 23-06-02 07:58:42
+Asia/Shanghai: 23-06-02 15:58:42
 current cron:
-UTC时间: '20 0,4,7,10,12,14 * * *'
-北京时间: '20 8,12,15,18,20,22 * * *'
-next cron:
 UTC时间: '57 0,4,7,10,12,14 * * *'
 北京时间: '57 8,12,15,18,20,22 * * *'
+next cron:
+UTC时间: '3 0,4,7,10,12,14 * * *'
+北京时间: '3 8,12,15,18,20,22 * * *'
