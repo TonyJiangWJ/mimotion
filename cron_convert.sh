@@ -43,3 +43,19 @@ function convert_utc_to_shanghai {
   echo "北京时间: $minute $result * * *'"
 }
 
+function persist_execute_log {
+  local event_name=$1
+  echo "trigger by: ${event_name}" > cron_change_time
+  echo "current system time:" >> cron_change_time
+  TZ='UTC' date "+%y-%m-%d %H:%M:%S" | xargs -I {} echo "UTC: {}" >> cron_change_time
+  TZ='Asia/Shanghai' date "+%y-%m-%d %H:%M:%S" | xargs -I {} echo "北京时间: {}" >> cron_change_time
+  current_cron=`cat .github/workflows/run.yml|grep cron|awk '{print substr($0, index($0,$3))}'`
+  echo "current cron:" >> cron_change_time
+  convert_utc_to_shanghai "$current_cron" >> cron_change_time
+  sed -i -E "s/(- cron: ')[0-9]+( [^[:space:]]+ \* \* \*')/\1$(($RANDOM % 59))\2/g" .github/workflows/run.yml
+  current_cron=`cat .github/workflows/run.yml|grep cron|awk '{print substr($0, index($0,$3))}'`
+  echo "next cron:" >> cron_change_time
+  convert_utc_to_shanghai "$current_cron" >> cron_change_time
+  inspect_next "$current_cron" >> cron_change_time
+}
+
