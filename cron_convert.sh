@@ -56,7 +56,7 @@ function persist_execute_log {
   if test -z "$new_cron_hours"; then
     sed -i -E "s/(- cron: ')[0-9]+( [^[:space:]]+ \* \* \*')/\1$(($RANDOM % 59))\2/g" .github/workflows/run.yml
   else
-    sed -i -E "s/(- cron: ')[0-9]+( [^[:space:]]+ \* \* \*')/\1$(($RANDOM % 59)) ${new_cron_hours} * * */g" .github/workflows/run.yml
+    sed -i -E "s/(- cron: ')[0-9]+( [^[:space:]]+ \* \* \*')/\1$(($RANDOM % 59)) ${new_cron_hours} * * *'/g" .github/workflows/run.yml
   fi
   current_cron=`cat .github/workflows/run.yml|grep cron|awk '{print substr($0, index($0,$3))}'`
   echo "next cron:" >> cron_change_time
