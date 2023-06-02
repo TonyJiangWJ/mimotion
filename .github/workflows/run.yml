@@ -1,12 +1,8 @@
 name: 刷步数
 
 on:
-  #push:
-  #  branches: [ main ]
-  #pull_request:
-  #  branches: [ main ]
   schedule:
-    - cron: '13 0,4,7,10,12,14 * * *'
+    - cron: '1 1,4,7,10,12,14 * * *'
   watch:
     types: started
   workflow_dispatch:
@@ -28,10 +24,8 @@ jobs:
           python-version: 3.8
           
       - name: 开始
+        env:
+            CONFIG: ${{ secrets.CONFIG }}
         run: |
-          pip3 install requests
-          user='${{ secrets.USER }}'
-          passwd='${{ secrets.PWD }}' 
-          open_get_weather='${{ secrets.OPEN_GET_WEATHER }}'
-          area='${{ secrets.AREA }}'
-          python3 main.py ${user} ${passwd} ${open_get_weather} ${area}
+          pip3 install requests pytz
+          python3 main.py ${{ secrets.CRON_HOURS }}

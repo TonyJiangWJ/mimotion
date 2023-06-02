@@ -1,123 +1,63 @@
 # -*- coding: utf8 -*-
-import datetime
+from datetime import datetime
+import pytz
+
 import json
 import math
 import random
 import re
-import sys
 import time
+import os
 
 import requests
 
-# 开启根据地区天气情况降低步数（默认关闭）
-open_get_weather = sys.argv[3]
-# 设置获取天气的地区（上面开启后必填）如：area = "宁波"
-area = sys.argv[4]
 
-# 以下如果看不懂直接默认就行只需改上面
-
-# 系数K查询到天气后降低步数比率，如查询得到设置地区为多云天气就会在随机后的步数乘0.9作为最终修改提交的步数
-K_dict = {"多云": 0.9, "阴": 0.8, "小雨": 0.7, "中雨": 0.5, "大雨": 0.4, "暴雨": 0.3, "大暴雨": 0.2, "特大暴雨": 0.2}
-
-# 北京时间
-time_bj = datetime.datetime.today() + datetime.timedelta(hours=8)
-now = time_bj.strftime("%Y-%m-%d %H:%M:%S")
-headers = {'User-Agent': 'MiFit/5.3.0 (iPhone; iOS 14.7.1; Scale/3.00)'}
+# 获取北京时间
+def get_beijing_time():
+    target_timezone = pytz.timezone('Asia/Shanghai')
+    # 获取当前时间
+    return datetime.now().astimezone(target_timezone)
 
 
-# 获取区域天气情况
-def getWeather():
-    if area == "NO":
-        print(area == "NO")
+def format_now():
+    return get_beijing_time().strftime("%Y-%m-%d %H:%M:%S")
+
+
+# 启动主函数
+def execute():
+    hour = time_bj.hour
+    min_ratio = max(math.ceil((hour / 3) - 1), 1)
+    max_ratio = max(math.ceil(hour / 3), 1)
+    min_1 = 3500 * min_ratio
+    max_1 = 3500 * max_ratio
+    user_mi = config.get('USER')
+    # 登录密码
+    passwd_mi = config.get('PWD')
+    if user_mi is None or passwd_mi is None:
+        print("未正确配置账号密码，无法执行")
         return
+    user_list = user_mi.split('#')
+    passwd_list = passwd_mi.split('#')
+    if len(user_list) == len(passwd_list):
+        for user_mi, passwd_mi in zip(user_list, passwd_list):
+            login_and_post_step(user_mi, passwd_mi, min_1, max_1)
     else:
-        global K, type
-        url = 'http://wthrcdn.etouch.cn/weather_mini?city=' + area
-        hea = {'User-Agent': 'Mozilla/5.0'}
-        r = requests.get(url=url, headers=hea)
-        if r.status_code == 200:
-            result = r.text
-            res = json.loads(result)
-            if "多云" in res['data']['forecast'][0]['type']:
-                K = K_dict["多云"]
-            elif "阴" in res['data']['forecast'][0]['type']:
-                K = K_dict["阴"]
-            elif "小雨" in res['data']['forecast'][0]['type']:
-                K = K_dict["小雨"]
-            elif "中雨" in res['data']['forecast'][0]['type']:
-                K = K_dict["中雨"]
-            elif "大雨" in res['data']['forecast'][0]['type']:
-                K = K_dict["大雨"]
-            elif "暴雨" in res['data']['forecast'][0]['type']:
-                K = K_dict["暴雨"]
-            elif "大暴雨" in res['data']['forecast'][0]['type']:
-                K = K_dict["大暴雨"]
-            elif "特大暴雨" in res['data']['forecast'][0]['type']:
-                K = K_dict["特大暴雨"]
-            type = res['data']['forecast'][0]['type']
-        else:
-            print("获取天气情况出错")
-
-
-# 获取北京时间确定随机步数&启动主函数
-def getBeijinTime():
-    global K, type
-    K = 1.0
-    type = ""
-    hea = {'User-Agent': 'Mozilla/5.0'}
-    url = r'https://apps.game.qq.com/CommArticle/app/reg/gdate.php'
-    if open_get_weather == "True":
-        getWeather()
-    r = requests.get(url=url, headers=hea)
-    if r.status_code == 200:
-        result = r.text
-        pattern = re.compile('\\d{4}-\\d{2}-\\d{2} (\\d{2}):\\d{2}:\\d{2}')
-        find = re.search(pattern, result)
-        hour = find.group(1)
-        min_ratio = max(math.ceil((int(hour) / 3) - 1), 0)
-        max_ratio = math.ceil(int(hour) / 3)
-        min_1 = 3500 * min_ratio
-        max_1 = 3500 * max_ratio
-        min_1 = int(K * min_1)
-        max_1 = int(K * max_1)
-    else:
-        print("获取北京时间失败")
-        return
-    if min_1 != 0 and max_1 != 0:
-        user_mi = sys.argv[1]
-        # 登录密码
-        passwd_mi = sys.argv[2]
-        user_list = user_mi.split('#')
-        passwd_list = passwd_mi.split('#')
-        if len(user_list) == len(passwd_list):
-            if K != 1.0:
-                msg_mi = "由于天气" + type + "，已设置降低步数,系数为" + str(K) + "。\n"
-            else:
-                msg_mi = ""
-            for user_mi, passwd_mi in zip(user_list, passwd_list):
-                msg_mi += main(user_mi, passwd_mi, min_1, max_1)
-                # print(msg_mi)
-    else:
-        print("当前主人设置了0步数呢，本次不提交")
-        return
+        print("账号数长度和密码数长度不匹配，跳过执行")
 
 
 # 获取登录code
-def get_code(location):
+def get_access_token(location):
     code_pattern = re.compile("(?<=access=).*?(?=&)")
-    code = code_pattern.findall(location)[0]
-    return code
+    return code_pattern.findall(location)[0]
 
 
 # 登录
 def login(user, password):
-    is_phone = False
-    if re.match(r'\d{11}', user):
-        is_phone = True
-    if is_phone:
-        url1 = "https://api-user.huami.com/registrations/+86" + user + "/tokens"
+    if ("+86" in user) or "@" in user:
+        user = user
     else:
-        url1 = "https://api-user.huami.com/registrations/" + user + "/tokens"
+        user = "+86" + user
+    url1 = "https://api-user.huami.com/registrations/" + user + "/tokens"
     headers = {
         "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
         "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.2"
@@ -129,16 +69,19 @@ def login(user, password):
         "token": "access"
     }
     r1 = requests.post(url1, data=data1, headers=headers, allow_redirects=False)
+    if r1.status_code != 303:
+        print("登录异常，status: %d" % r1.status_code)
+        return 0, 0
     location = r1.headers["Location"]
     try:
-        code = get_code(location)
+        code = get_access_token(location)
     except:
         return 0, 0
     # print("access_code获取成功！")
     # print(code)
 
     url2 = "https://account.huami.com/v2/client/login"
-    if is_phone:
+    if "+86" in user:
         data2 = {
             "app_name": "com.xiaomi.hm.health",
             "app_version": "4.6.0",
@@ -177,7 +120,7 @@ def login(user, password):
 
 
 # 主函数
-def main(_user, _passwd, min_1, max_1):
+def login_and_post_step(_user, _passwd, min_1, max_1):
     user = str(_user)
     password = str(_passwd)
     step = str(random.randint(min_1, max_1))
@@ -213,17 +156,15 @@ def main(_user, _passwd, min_1, max_1):
 
     response = requests.post(url, data=data, headers=head).json()
     # print(response)
-    result = f"[{now}]\n账号：{user[:3]}****{user[7:]}\n修改步数（{step}）[" + response['message'] + "]\n"
+    result = f"[{format_now()}]\n账号：{user[:3]}****{user[-4:]}\n修改步数（{step}）[" + response['message'] + "]\n"
     print(result)
     return result
 
 
 # 获取时间戳
 def get_time():
-    url = 'http://api.m.taobao.com/rest/api3.do?api=mtop.common.getTimestamp'
-    response = requests.get(url, headers=headers).json()
-    t = response['data']['t']
-    return t
+    current_time = get_beijing_time()
+    return "%.0f" % (current_time.timestamp() * 1000)
 
 
 # 获取app_token
@@ -237,4 +178,11 @@ def get_app_token(login_token):
 
 
 if __name__ == "__main__":
-    getBeijinTime()
+    # 北京时间
+    time_bj = get_beijing_time()
+    headers = {'User-Agent': 'MiFit/5.3.0 (iPhone; iOS 14.7.1; Scale/3.00)'}
+    if os.environ.__contains__("CONFIG") is False:
+        print("未配置CONFIG变量，无法执行")
+    else:
+        config = json.loads(os.environ.get("CONFIG"))
+        execute()
