@@ -18,7 +18,7 @@ jobs:
       - name: random cron
         run: |
           source cron_convert.sh
-          persist_execute_log ${{ github.event_name }}
+          persist_execute_log ${{ github.event_name }} ${{ variables.CRON_HOURS }}
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add .

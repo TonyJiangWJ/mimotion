@@ -41,7 +41,7 @@
 #### 前往仓库设置创建变量
 
 - Settings-->Secrets and variables-->Actions-->New repository secret
-- 快捷跳转地址 [https://github.com/${你的github用户名}/mimotion/settings/secrets/actions](./settings/secrets/actions)
+- 快捷跳转地址 [https://github.com/${你的github用户名}/mimotion/settings/secrets/actions](../../settings/secrets/actions)
 - 点击右侧的 `New repository secret` 即可添加Secret
 
 > 添加名为 **PAT** 的变量，值为第一步申请的token
@@ -88,13 +88,15 @@
       - cron: '50 0,4,7,10,12,14 * * *'
   ```
 
-- 2、添加名为 `CRON_HOURS` 的Secret变量 `Settings-->Secrets and variables-->Actions-->New repository secret`
-  - 填写自动执行的时间，单位为小时，此处需要设置UTC时间，例如设置`0,2,4,6,8,14`则会在北京时间`8,10,12,14,16,22`点触发执行
+- 2、添加名为 `CRON_HOURS` 的Variables变量 `Settings-->Secrets and variables-->Actions-->New repository variables` 注意不是Secret
+- 快捷跳转地址 [https://github.com/${你的github用户名}/mimotion/settings/variables/actions](../../settings/variables/actions)
+  - 填写自动执行的时间，单位为小时，此处需要设置UTC时间，例如设置 `0,2,4,6,8,14` 则会在北京时间 `8,10,12,14,16,22` 点触发执行
+- 添加完成后可以在Actions中手动触发：`Random cron` 来触发替换。
 - github actions 0点为执行高峰，排队可能会延后一两小时才执行，建议直接从2开始
 
 ### 五、手动触发测试工作流
 
-- 前往Actions,左侧选择 `刷步数`，快捷链接：[https://github.com/${你的github用户名}/mimotion/actions/workflows/run.yml](./actions/workflows/run.yml)
+- 前往Actions,左侧选择 `刷步数`，快捷链接：[https://github.com/${你的github用户名}/mimotion/actions/workflows/run.yml](../../actions/workflows/run.yml)
 - 点击右侧的`Run workflow`触发执行，触发后刷新即可查看执行记录。验证是否正确配置并执行刷步数。
 
 ### 六、感谢列表

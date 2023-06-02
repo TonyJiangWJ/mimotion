@@ -6,7 +6,6 @@ import json
 import math
 import random
 import re
-import sys
 import time
 import os
 
@@ -178,43 +177,7 @@ def get_app_token(login_token):
     return app_token
 
 
-def change_cron_hours():
-    if NEW_CRON_HOURS is None or NEW_CRON_HOURS == "":
-        return
-    # - cron: '50 0,4,7,10,12,14 * * *'
-    regex = re.compile(r".*cron:\s+'\d+\s+([\d,]+)\s.*'")
-    find = False
-    replace = False
-    with open('.github/workflows/run.yml') as fr:
-        lines = fr.readlines()
-        idx = 0
-        for line in lines:
-            idx += 1
-            if find:
-                continue
-            match = regex.match(line)
-            if match is not None:
-                find = True
-                current = match.group(1)
-                print('current hours: %s' % current)
-                if current != NEW_CRON_HOURS:
-                    replace = True
-                    line = line.replace(current, NEW_CRON_HOURS)
-                    lines[idx - 1] = line
-                    print("change line to: %s" % line.strip())
-    if find is False:
-        print("未找到")
-    if replace:
-        print('执行替换')
-        with open('.github/workflows/run.yml', 'w') as fw:
-            fw.writelines(lines)
-
-
 if __name__ == "__main__":
-    args = sys.argv
-    NEW_CRON_HOURS = ""
-    if len(args) > 1:
-        NEW_CRON_HOURS = args[1]
     # 北京时间
     time_bj = get_beijing_time()
     headers = {'User-Agent': 'MiFit/5.3.0 (iPhone; iOS 14.7.1; Scale/3.00)'}
@@ -223,4 +186,3 @@ if __name__ == "__main__":
     else:
         config = json.loads(os.environ.get("CONFIG"))
         execute()
-        change_cron_hours()
