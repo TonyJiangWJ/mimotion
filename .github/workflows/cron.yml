@@ -16,7 +16,9 @@ jobs:
       - name: random cron
         run: |
           sed -i -E "s/(- cron: ')[0-9]+( [^[:space:]]+ \* \* \*')/\1$(($RANDOM % 59))\2/g" .github/workflows/run.yml
-          echo `date "+%m-%d %H:%M:%S"` > cron_change_time
+          TZ='UTC' date "+%y-%m-%d %H:%M:%S" | xargs -I {} echo "UTC: {}" > cron_change_time
+          TZ='Asia/Shanghai' date "+%y-%m-%d %H:%M:%S" | xargs -I {} echo "Asia/Shanghai: {}" >> cron_change_time
+          cat .github/workflows/run.yml|grep cron|xargs -I {} echo "next {}" >> cron_change_time
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add .
