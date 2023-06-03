@@ -11,6 +11,8 @@
 - 注册账号后建议先去以下网站测试自己的账号刷步数是否正常：[出去走走：https://motion.faithxy.com/](https://motion.faithxy.com/)
 - 如无法刷步数同步到支付宝等，建议重新注册一个新的。
 
+### 如果觉得好用，请给一个免费的star吧
+
 ## Github Actions 部署指南
 
 ### 一、Fork 此仓库，然后创建token
