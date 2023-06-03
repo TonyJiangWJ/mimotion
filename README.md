@@ -44,10 +44,11 @@
 - 快捷跳转地址 [https://github.com/${你的github用户名}/mimotion/settings/secrets/actions](../../settings/secrets/actions)
 - 点击右侧的 `New repository secret` 即可添加Secret
 
-#### 添加名为 **PAT** 的变量，值为第一步申请的token
+#### 添加名为 **PAT** 的Secret变量，值为第一步申请的token
 
-#### 添加名为 **CONFIG** 的变量
+#### 添加名为 **CONFIG** 的Secret变量
 
+- 需要注意Secret变量是密文，提交后无法查看，只能删除或用新值更新，建议本地保存一下自己的配置数据方便后期修改。
 - CONFIG的内容：
 
   ```json
@@ -90,12 +91,12 @@
 
 #### 两种方式自定义启动时间
 
-- 1、添加名为 `CRON_HOURS` 的Variables变量 `Settings-->Secrets and variables-->Actions-->New repository variables` 注意不是Secret
+##### 1、添加名为 `CRON_HOURS` 的Variables变量 `Settings-->Secrets and variables-->Actions-->New repository variables` 注意不是Secret
 - 快捷跳转地址 [https://github.com/${你的github用户名}/mimotion/settings/variables/actions](../../settings/variables/actions)
   - 填写自动执行的时间，单位为小时，此处需要设置UTC时间，例如设置 `0,2,4,6,8,14` 则会在北京时间 `8,10,12,14,16,22` 点触发执行
 - 添加完成后可以在Actions中手动触发：`Random cron` 来触发替换，或者等下一次定时执行时它将会自动替换。
 
-- 2、编辑 **.github/workflows/run.yml** 中的cron表达式
+##### 2、编辑 **.github/workflows/run.yml** 中的cron表达式
   - cron表达式格式如下: `分 小时 日期 月份 年份`
   - github actions中执行时间为UTC时间，即**北京时间-8**，如果需要每天`8，10，12，14，16，22`点执行，则设置cron为`0 0,2,4,6,8,14 * * *`
   ```yaml
@@ -103,8 +104,9 @@
     schedule:
       - cron: '0 0,2,4,6,8,14 * * *'
   ```
-  - **注意** 如果已添加 `CRON_HOURS` 变量，则修改此文件的cron表达式会失效，在下次执行后会被覆盖为 `CRON_HOURS` 配置的值
+  - **注意** 如果已添加 `CRON_HOURS` 变量，则修改此文件的cron表达式会失效，在下次执行后表达式中小时的部分会被覆盖为 `CRON_HOURS` 配置的值
 
+- 注意以上两种方式二选一即可，推荐直接使用方式1，变量值填写的是逗号分隔的数字，别乱填别的报错别找我！
 - github actions 0点为执行高峰，排队可能会延后一两小时才执行，建议直接从2开始
 
 ### 五、手动触发测试工作流
@@ -116,6 +118,12 @@
 ### 六、感谢列表
 
 本项目基于 `https://github.com/xunichanghuan/mimotion(已被ban)` 和 [https://github.com/huangshihai/mimotion](https://github.com/huangshihai/mimotion) 项目修改，特此感谢
+
+### 七、同步最新代码
+
+- 点击仓库界面上的 `Sync fork`，找不到的话直接Ctrl+F网页查找
+- 然后点击 `Update branch` 等待同步完成即可，如有其他提示请自行按提示操作
+- 同步更新后请自己再次仔细阅读README，配置项目修改等请自行对比，更新后因为配置不正确导致无法运行请不要找我
 
 ## 注意事项
 
@@ -133,6 +141,6 @@
 
 7. 请注意，账号不是 [小米账号]，而是 [小米运动/ZeppLife] 的账号。
 
-8. 最大步数和最小步数随着时间增长，10点执行时范围为10/22*18000~10/22*25000：8181~11363，以此类推，在北京时间22点达到最大值，即22点执行时随机步数的范围为18000-25000之间。要修改这个范围可以修改CONFIG中的MIN_STEP和MAX_STEP。
+8. 最大步数和最小步数随着时间增长，10点执行时范围为10/22\*18000~10/22\*25000：8181~11363，以此类推，在北京时间22点达到最大值，即22点执行时随机步数的范围为18000-25000之间。要修改这个范围可以修改CONFIG中的MIN_STEP和MAX_STEP。
 
 9. cron的执行根据github actions的资源进行排队，并不是百分百按指定的时间进行运行，请知悉。
