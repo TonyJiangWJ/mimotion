@@ -1,9 +1,9 @@
 # -*- coding: utf8 -*-
+import traceback
 from datetime import datetime
 import pytz
 
 import json
-import math
 import random
 import re
 import time
@@ -19,36 +19,38 @@ def get_beijing_time():
     return datetime.now().astimezone(target_timezone)
 
 
+# 格式化时间
 def format_now():
     return get_beijing_time().strftime("%Y-%m-%d %H:%M:%S")
 
 
-# 启动主函数
-def execute():
-    hour = time_bj.hour
-    min_ratio = max(math.ceil((hour / 3) - 1), 1)
-    max_ratio = max(math.ceil(hour / 3), 1)
-    min_1 = 3500 * min_ratio
-    max_1 = 3500 * max_ratio
-    user_mi = config.get('USER')
-    # 登录密码
-    passwd_mi = config.get('PWD')
-    if user_mi is None or passwd_mi is None:
-        print("未正确配置账号密码，无法执行")
-        return
-    user_list = user_mi.split('#')
-    passwd_list = passwd_mi.split('#')
-    if len(user_list) == len(passwd_list):
-        for user_mi, passwd_mi in zip(user_list, passwd_list):
-            login_and_post_step(user_mi, passwd_mi, min_1, max_1)
-    else:
-        print("账号数长度和密码数长度不匹配，跳过执行")
+# 获取默认值转int
+def get_int_value_default(_config: dict, _key, default):
+    _config.setdefault(_key, default)
+    return int(_config.get(_key))
+
+
+# 获取当前时间对应的最大和最小步数
+def get_min_max_by_time(hour=None, minute=None):
+    if hour is None:
+        hour = time_bj.hour
+    if minute is None:
+        minute = time_bj.minute
+    time_rate = min((hour * 60 + minute) / (22 * 60), 1)
+    min_step = get_int_value_default(config, 'MIN_STEP', 18000)
+    max_step = get_int_value_default(config, 'MAX_STEP', 25000)
+    return int(time_rate * min_step), int(time_rate * max_step)
 
 
 # 获取登录code
 def get_access_token(location):
     code_pattern = re.compile("(?<=access=).*?(?=&)")
     return code_pattern.findall(location)[0]
+
+
+# 虚拟ip地址
+def fake_ip():
+    return f"{random.randint(1, 255)}.{random.randint(1, 255)}.{random.randint(1, 255)}.{random.randint(1, 255)}"
 
 
 # 登录
@@ -58,9 +60,10 @@ def login(user, password):
     else:
         user = "+86" + user
     url1 = "https://api-user.huami.com/registrations/" + user + "/tokens"
-    headers = {
+    login_headers = {
         "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
-        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.2"
+        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.2",
+        "X-Forwarded-For": fake_ip_addr
     }
     data1 = {
         "client_id": "HuaMi",
@@ -68,7 +71,7 @@ def login(user, password):
         "redirect_uri": "https://s3-us-west-2.amazonaws.com/hm-registration/successsignin.html",
         "token": "access"
     }
-    r1 = requests.post(url1, data=data1, headers=headers, allow_redirects=False)
+    r1 = requests.post(url1, data=data1, headers=login_headers, allow_redirects=False)
     if r1.status_code != 303:
         print("登录异常，status: %d" % r1.status_code)
         return 0, 0
@@ -108,7 +111,7 @@ def login(user, password):
             "source": "com.xiaomi.hm.health",
             "third_name": "email",
         }
-    r2 = requests.post(url2, data=data2, headers=headers).json()
+    r2 = requests.post(url2, data=data2, headers=login_headers).json()
     login_token = r2["token_info"]["login_token"]
     # print("login_token获取成功！")
     # print(login_token)
@@ -119,19 +122,21 @@ def login(user, password):
     return login_token, userid
 
 
+def desensitize_user_name(user):
+    return f'{user[:3]}****{user[-4:]}'
+
+
 # 主函数
-def login_and_post_step(_user, _passwd, min_1, max_1):
+def login_and_post_step(_user, _passwd, min_step, max_step):
     user = str(_user)
     password = str(_passwd)
-    step = str(random.randint(min_1, max_1))
-    print("已设置为随机步数(" + str(min_1) + "~" + str(max_1) + ")")
+    step = str(random.randint(min_step, max_step))
+    print(f"已设置为随机步数范围({min_step}~{max_step}) 随机值:{step}")
     if user == '' or password == '':
-        print("用户名或密码填写有误！")
-        return
+        return "用户名或密码填写有误！", False
     login_token, userid = login(user, password)
     if login_token == 0:
-        print("登陆失败！")
-        return "login fail!"
+        return "登陆失败！", False
 
     t = get_time()
 
@@ -149,16 +154,15 @@ def login_and_post_step(_user, _passwd, min_1, max_1):
     url = f'https://api-mifit-cn.huami.com/v1/data/band_data.json?&t={t}'
     head = {
         "apptoken": app_token,
-        "Content-Type": "application/x-www-form-urlencoded"
+        "Content-Type": "application/x-www-form-urlencoded",
+        "X-Forwarded-For": fake_ip_addr
     }
 
     data = f'userid={userid}&last_sync_data_time=1597306380&device_type=0&last_deviceid=DA932FFFFE8816E7&data_json={data_json}'
 
     response = requests.post(url, data=data, headers=head).json()
     # print(response)
-    result = f"[{format_now()}]\n账号：{user[:3]}****{user[-4:]}\n修改步数（{step}）[" + response['message'] + "]\n"
-    print(result)
-    return result
+    return f"修改步数（{step}）[" + response['message'] + "]", True
 
 
 # 获取时间戳
@@ -170,6 +174,7 @@ def get_time():
 # 获取app_token
 def get_app_token(login_token):
     url = f"https://account-cn.huami.com/v1/client/app_tokens?app_name=com.xiaomi.hm.health&dn=api-user.huami.com%2Capi-mifit.huami.com%2Capp-analytics.huami.com&login_token={login_token}"
+    headers = {'User-Agent': 'MiFit/5.3.0 (iPhone; iOS 14.7.1; Scale/3.00)', 'X-Forwarded-For': fake_ip_addr}
     response = requests.get(url, headers=headers).json()
     app_token = response['token_info']['app_token']
     # print("app_token获取成功！")
@@ -177,12 +182,81 @@ def get_app_token(login_token):
     return app_token
 
 
+# 启动主函数
+def execute():
+    min_step, max_step = get_min_max_by_time()
+    user_mi = config.get('USER')
+    # 登录密码
+    passwd_mi = config.get('PWD')
+    if user_mi is None or passwd_mi is None:
+        print("未正确配置账号密码，无法执行")
+        return
+    user_list = user_mi.split('#')
+    passwd_list = passwd_mi.split('#')
+    exec_results = []
+    if len(user_list) == len(passwd_list):
+        left = len(user_list)
+        for user_mi, passwd_mi in zip(user_list, passwd_list):
+            global fake_ip_addr
+            fake_ip_addr = fake_ip()
+            print(f"创建虚拟ip地址：{fake_ip_addr}")
+            try:
+                exec_msg, success = login_and_post_step(user_mi, passwd_mi, min_step, max_step)
+                print(f'[{format_now()}]\n账号：{desensitize_user_name(user_mi)}\n{exec_msg}\n')
+                exec_result = {"user": user_mi, "success": success,
+                               "msg": exec_msg}
+            except:
+                traceback.print_exc()
+                exec_result = {"user": user_mi, "success": False,
+                               "msg": f"执行异常:{traceback.format_exc()}"}
+            exec_results.append(exec_result)
+        if PUSH_PLUS_TOKEN is not None and PUSH_PLUS_TOKEN != '' and PUSH_PLUS_TOKEN != 'NO':
+            html = '<ul>'
+            for exec_result in exec_results:
+                success = exec_result['success']
+                if success is not None and success is True:
+                    html += f'<li><span>账号：{exec_result["user"]}</span>刷步数成功，接口返回：{exec_result["msg"]}</li>'
+                else:
+                    html += f'<li><span>账号：{exec_result["user"]}</span>刷步数失败，失败原因：{exec_result["msg"]}</li>'
+            html += '</ul>'
+            push_plus(f"{format_now()} 刷步数通知", html)
+        left -= 1
+        if left > 0:
+            time.sleep(5)
+    else:
+        print(f"账号数长度[{len(user_list)}]和密码数长度[{len(passwd_list)}]不匹配，跳过执行")
+        exit(1)
+
+
+# pushplus消息推送
+def push_plus(title, content):
+    requestUrl = f"http://www.pushplus.plus/send"
+    data = {
+        "token": PUSH_PLUS_TOKEN,
+        "title": title,
+        "content": content,
+        "template": "html",
+        "channel": "wechat"
+    }
+    try:
+        response = requests.post(requestUrl, data=data)
+        if response.status_code == 200:
+            json_res = response.json()
+            print(f"pushplus推送完毕：{json_res['code']}-{json_res['msg']}")
+        else:
+            print("pushplus推送失败")
+    except:
+        print("pushplus推送异常")
+
+
 if __name__ == "__main__":
     # 北京时间
     time_bj = get_beijing_time()
-    headers = {'User-Agent': 'MiFit/5.3.0 (iPhone; iOS 14.7.1; Scale/3.00)'}
+    fake_ip_addr = fake_ip()
     if os.environ.__contains__("CONFIG") is False:
         print("未配置CONFIG变量，无法执行")
+        exit(1)
     else:
-        config = json.loads(os.environ.get("CONFIG"))
+        config = dict(json.loads(os.environ.get("CONFIG")))
+        PUSH_PLUS_TOKEN = config.get('PUSH_PLUS_TOKEN')
         execute()
