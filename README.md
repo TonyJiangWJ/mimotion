@@ -1,9 +1,9 @@
 # mimotion
 
-![ 刷步数](https://github.com/tonyjiangwj/mimotion/actions/workflows/run.yml/badge.svg)
-[![GitHub forks](https://img.shields.io/github/forks/tonyjiangwj/mimotion?style=flat-square)](https://github.com/tonyjiangwj/mimotion/network)
-[![GitHub stars](https://img.shields.io/github/stars/tonyjiangwj/mimotion?style=flat-square)](https://github.com/tonyjiangwj/mimotion/stargazers)
-[![GitHub issues](https://img.shields.io/github/issues/tonyjiangwj/mimotion?style=flat-square)](https://github.com/tonyjiangwj/mimotion/issues)
+![ 刷步数](https://github.com/TonyJiangWJ/mimotion/actions/workflows/run.yml/badge.svg)
+[![GitHub forks](https://img.shields.io/github/forks/TonyJiangWJ/mimotion?style=flat-square)](https://github.com/TonyJiangWJ/mimotion/network)
+[![GitHub stars](https://img.shields.io/github/stars/TonyJiangWJ/mimotion?style=flat-square)](https://github.com/TonyJiangWJ/mimotion/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues/TonyJiangWJ/mimotion?style=flat-square)](https://github.com/TonyJiangWJ/mimotion/issues)
 
 ## 小米运动自动刷步数（支持邮箱登录）
 
@@ -26,7 +26,6 @@
   - `Contents` Access: `Read and write` 用于更新定时任务和日志文件的权限
   - `Metadata` Access: `Read-only` 这个自带的必选
   - `Workflows` Access: `Read and write` 获取用于更新 `.github/workflow` 下文件的权限
-- 完毕后点击最底下的 `Generate token` 即可生成token，复制token并保存到自己电脑以备后续使用，关闭当前页面后将无法再看到它
 
 #### 你也可以创建更大权限的不限时token
 
@@ -34,7 +33,8 @@
 - 前往[https://github.com/settings/tokens/new](https://github.com/settings/tokens/new)创建
 - 填写token名称，选择有效期
 - `Select scopes` 勾选 `repo` 和 `workflow` 即可
-- 完毕后点击最底下的 `Generate token` 即可生成token，复制token并保存到自己电脑以备后续使用，关闭当前页面后将无法再看到它
+
+#### 创建完毕后点击最底下的 `Generate token` 即可生成token，复制token并自己保存一下以备后续使用，关闭当前页面后将无法再看到它。
 
 ### 二、设置账号密码
 
@@ -53,14 +53,20 @@
   ```json
   {
     "USER": "abcxxx@xx.com",
-    "PWD": "password"
+    "PWD": "password",
+    "MIN_STEP": "18000",
+    "MAX_STEP": "25000",
+    "PUSH_PLUS_TOKEN": ""
   }
   ```
 
-| 字段名  | 格式                                  |
-|------|-------------------------------------|
-| USER | 小米运动登录账号，仅支持小米运动账号对应的手机号或邮箱，不支持小米账号 |
-| PWD  | 小米运动登录密码，仅支持小米运动账号对应的密码             |
+  | 字段名             | 格式                                                                                              |
+  |-----------------|-------------------------------------------------------------------------------------------------|
+  | USER            | 小米运动登录账号，仅支持小米运动账号对应的手机号或邮箱，不支持小米账号                                                             |
+  | PWD             | 小米运动登录密码，仅支持小米运动账号对应的密码                                                                         |
+  | MIN_STEP        | 最小步数                                                                                            |
+  | MAX_STEP        | 最大步数，最大步数和最小步数随机范围随着时间线性增加，北京时间22点达到最大值                                                         |
+  | PUSH_PLUS_TOKEN | 推送加的个人token,申请地址[pushplus](https://www.pushplus.plus/push1.html)，工作流执行完成后推送每个账号的执行状态信息，如没有则不要填写 |
 
 ### 三、多账户设置(用不上请忽略)
 
@@ -71,28 +77,34 @@
 ```json
 {
   "USER": "13800138000#13800138001",
-  "PWD": "abc123qwe#abcqwe2"
+  "PWD": "abc123qwe#abcqwe2",
+  "MIN_STEP": "18000",
+  "MAX_STEP": "25000",
+  "PUSH_PLUS_TOKEN": ""
 }
 ```
+
+#### 注意 **#** 分隔的账号和密码数量必须匹配，否则将跳过执行
 
 ### 四、自定义启动时间
 
 #### 两种方式自定义启动时间
 
-- 1、编辑 **.github/workflows/run.yml** 中的cron表达式
+- 1、添加名为 `CRON_HOURS` 的Variables变量 `Settings-->Secrets and variables-->Actions-->New repository variables` 注意不是Secret
+- 快捷跳转地址 [https://github.com/${你的github用户名}/mimotion/settings/variables/actions](../../settings/variables/actions)
+  - 填写自动执行的时间，单位为小时，此处需要设置UTC时间，例如设置 `0,2,4,6,8,14` 则会在北京时间 `8,10,12,14,16,22` 点触发执行
+- 添加完成后可以在Actions中手动触发：`Random cron` 来触发替换，或者等下一次定时执行时它将会自动替换。
+
+- 2、编辑 **.github/workflows/run.yml** 中的cron表达式
   - cron表达式格式如下: `分 小时 日期 月份 年份`
   - github actions中执行时间为UTC时间，即**北京时间-8**，如果需要每天`8，10，12，14，16，22`点执行，则设置cron为`0 0,2,4,6,8,14 * * *`
-
   ```yaml
   on:
     schedule:
       - cron: '0 0,2,4,6,8,14 * * *'
   ```
+  - **注意** 如果已添加 `CRON_HOURS` 变量，则修改此文件的cron表达式会失效，在下次执行后会被覆盖为 `CRON_HOURS` 配置的值
 
-- 2、添加名为 `CRON_HOURS` 的Variables变量 `Settings-->Secrets and variables-->Actions-->New repository variables` 注意不是Secret
-- 快捷跳转地址 [https://github.com/${你的github用户名}/mimotion/settings/variables/actions](../../settings/variables/actions)
-  - 填写自动执行的时间，单位为小时，此处需要设置UTC时间，例如设置 `0,2,4,6,8,14` 则会在北京时间 `8,10,12,14,16,22` 点触发执行
-- 添加完成后可以在Actions中手动触发：`Random cron` 来触发替换。
 - github actions 0点为执行高峰，排队可能会延后一两小时才执行，建议直接从2开始
 
 ### 五、手动触发测试工作流
@@ -117,10 +129,10 @@
 
 5. 小米运动不会更新步数，只有关联的会同步！！！！！
 
-6. 请各位在使用时Fork[当前分支](https://github.com/tonyjiangwj/mimotion/)，防止出现不必要的bug.
+6. 请各位在使用时Fork[当前仓库](https://github.com/TonyJiangWJ/mimotion/)，防止出现不必要的bug.
 
 7. 请注意，账号不是 [小米账号]，而是 [小米运动/ZeppLife] 的账号。
 
-8. 最大步数和最小步数随着时间增长，最后一次运行时到达最大步数，即默认最后一次运行在22点时，最大步数：Math.ceil(22/3)*3500=28000，最小为 Math.ceil(22/3-1)*3500=24500。
+8. 最大步数和最小步数随着时间增长，10点执行时范围为10/22*18000~10/22*25000：8181~11363，以此类推，在北京时间22点达到最大值，即22点执行时随机步数的范围为18000-25000之间。要修改这个范围可以修改CONFIG中的MIN_STEP和MAX_STEP。
 
 9. cron的执行根据github actions的资源进行排队，并不是百分百按指定的时间进行运行，请知悉。

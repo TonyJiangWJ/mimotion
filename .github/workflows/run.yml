@@ -2,7 +2,7 @@ name: 刷步数
 
 on:
   schedule:
-    - cron: '1 1,4,7,10,12,14 * * *'
+    - cron: '48 1,4,7,10,12,14 * * *'
   watch:
     types: started
   workflow_dispatch:
@@ -12,14 +12,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout codes
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Update system and install zsh
         run: |
           sudo -E apt-get -qq update
           sudo -E apt-get install zsh -y
           
       - name: 初始化Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
           python-version: 3.8
           
