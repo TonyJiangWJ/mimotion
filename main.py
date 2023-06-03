@@ -211,6 +211,10 @@ def execute():
                                "msg": f"执行异常:{traceback.format_exc()}"}
             exec_results.append(exec_result)
         if PUSH_PLUS_TOKEN is not None and PUSH_PLUS_TOKEN != '' and PUSH_PLUS_TOKEN != 'NO':
+            if PUSH_PLUS_HOUR is not None and PUSH_PLUS_HOUR.isdigit():
+                if time_bj.hour != int(PUSH_PLUS_HOUR):
+                    print(f"当前设置push_plus推送整点为：{PUSH_PLUS_HOUR}, 当前整点为：{time_bj.hour}，跳过推送")
+                    return
             html = '<ul>'
             for exec_result in exec_results:
                 success = exec_result['success']
@@ -259,4 +263,5 @@ if __name__ == "__main__":
     else:
         config = dict(json.loads(os.environ.get("CONFIG")))
         PUSH_PLUS_TOKEN = config.get('PUSH_PLUS_TOKEN')
+        PUSH_PLUS_HOUR = config.get('PUSH_PLUS_HOUR')
         execute()
