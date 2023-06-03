@@ -1,0 +1,13 @@
+name: star watcher
+
+on:
+  watch:
+    types: started
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print
+        run: |
+          TZ=Asia/Shanghai date "+%y-%m-%d %H:%M:%S" | xargs -I {} echo "[{}] 被点star了"
