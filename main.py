@@ -199,17 +199,24 @@ def execute():
         for user_mi, passwd_mi in zip(user_list, passwd_list):
             global fake_ip_addr
             fake_ip_addr = fake_ip()
-            print(f"创建虚拟ip地址：{fake_ip_addr}")
+            print(f"[{format_now()}]\n账号：{desensitize_user_name(user_mi)}\n创建虚拟ip地址：{fake_ip_addr}")
             try:
                 exec_msg, success = login_and_post_step(user_mi, passwd_mi, min_step, max_step)
-                print(f'[{format_now()}]\n账号：{desensitize_user_name(user_mi)}\n{exec_msg}\n')
+                print(f'{exec_msg}\n')
                 exec_result = {"user": user_mi, "success": success,
                                "msg": exec_msg}
             except:
+                print(f"执行异常:{traceback.format_exc()}\n")
                 traceback.print_exc()
                 exec_result = {"user": user_mi, "success": False,
                                "msg": f"执行异常:{traceback.format_exc()}"}
             exec_results.append(exec_result)
+            left -= 1
+            if left > 0:
+                # 每个账号之间间隔五秒请求一次，避免接口请求过于频繁导致异常
+                time.sleep(5)
+
+        # 判断是否需要pushplus推送
         if PUSH_PLUS_TOKEN is not None and PUSH_PLUS_TOKEN != '' and PUSH_PLUS_TOKEN != 'NO':
             if PUSH_PLUS_HOUR is not None and PUSH_PLUS_HOUR.isdigit():
                 if time_bj.hour != int(PUSH_PLUS_HOUR):
@@ -224,9 +231,6 @@ def execute():
                     html += f'<li><span>账号：{exec_result["user"]}</span>刷步数失败，失败原因：{exec_result["msg"]}</li>'
             html += '</ul>'
             push_plus(f"{format_now()} 刷步数通知", html)
-        left -= 1
-        if left > 0:
-            time.sleep(5)
     else:
         print(f"账号数长度[{len(user_list)}]和密码数长度[{len(passwd_list)}]不匹配，跳过执行")
         exit(1)
