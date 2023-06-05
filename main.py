@@ -45,12 +45,16 @@ def get_min_max_by_time(hour=None, minute=None):
 # 获取登录code
 def get_access_token(location):
     code_pattern = re.compile("(?<=access=).*?(?=&)")
-    return code_pattern.findall(location)[0]
+    result = code_pattern.findall(location)
+    if result is None or len(result) == 0:
+        return None
+    return result[0]
 
 
 # 虚拟ip地址
 def fake_ip():
-    return f"{random.randint(1, 255)}.{random.randint(1, 255)}.{random.randint(1, 255)}.{random.randint(1, 255)}"
+    # 随便找的国内IP段：223.64.0.0 - 223.117.255.255
+    return f"{223}.{random.randint(64, 117)}.{random.randint(0, 255)}.{random.randint(0, 255)}"
 
 
 # 登录
@@ -78,7 +82,11 @@ def login(user, password):
     location = r1.headers["Location"]
     try:
         code = get_access_token(location)
+        if code is None:
+            print("获取accessToken失败")
+            return 0, 0
     except:
+        print("获取accessToken异常:", traceback.format_exc())
         return 0, 0
     # print("access_code获取成功！")
     # print(code)
@@ -195,11 +203,11 @@ def execute():
     passwd_list = passwd_mi.split('#')
     exec_results = []
     if len(user_list) == len(passwd_list):
-        left = len(user_list)
+        idx, total = 1, len(user_list)
         for user_mi, passwd_mi in zip(user_list, passwd_list):
             global fake_ip_addr
             fake_ip_addr = fake_ip()
-            print(f"[{format_now()}]\n账号：{desensitize_user_name(user_mi)}\n创建虚拟ip地址：{fake_ip_addr}")
+            print(f"[{format_now()}]\n[{idx}/{total}]账号：{desensitize_user_name(user_mi)}\n创建虚拟ip地址：{fake_ip_addr}")
             try:
                 exec_msg, success = login_and_post_step(user_mi, passwd_mi, min_step, max_step)
                 print(f'{exec_msg}\n')
@@ -211,10 +219,10 @@ def execute():
                 exec_result = {"user": user_mi, "success": False,
                                "msg": f"执行异常:{traceback.format_exc()}"}
             exec_results.append(exec_result)
-            left -= 1
-            if left > 0:
-                # 每个账号之间间隔五秒请求一次，避免接口请求过于频繁导致异常
-                time.sleep(5)
+            idx += 1
+            if idx < total:
+                # 每个账号之间间隔一定时间请求一次，避免接口请求过于频繁导致异常
+                time.sleep(sleep_seconds)
 
         # 判断是否需要pushplus推送
         if PUSH_PLUS_TOKEN is not None and PUSH_PLUS_TOKEN != '' and PUSH_PLUS_TOKEN != 'NO':
@@ -268,4 +276,8 @@ if __name__ == "__main__":
         config = dict(json.loads(os.environ.get("CONFIG")))
         PUSH_PLUS_TOKEN = config.get('PUSH_PLUS_TOKEN')
         PUSH_PLUS_HOUR = config.get('PUSH_PLUS_HOUR')
+        sleep_seconds = config.get('SLEEP_GAP')
+        if sleep_seconds is None or sleep_seconds == '':
+            sleep_seconds = 5
+        print(f"多账号执行间隔：{sleep_seconds}")
         execute()
