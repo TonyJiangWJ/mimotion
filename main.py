@@ -214,7 +214,7 @@ def execute():
             left -= 1
             if left > 0:
                 # 每个账号之间间隔五秒请求一次，避免接口请求过于频繁导致异常
-                time.sleep(5)
+                time.sleep(0.5)
 
         # 判断是否需要pushplus推送
         if PUSH_PLUS_TOKEN is not None and PUSH_PLUS_TOKEN != '' and PUSH_PLUS_TOKEN != 'NO':
