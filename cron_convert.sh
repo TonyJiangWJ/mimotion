@@ -90,7 +90,7 @@ function persist_execute_log {
     convert_utc_to_shanghai "$current_cron"
   } >> cron_change_time
   os=$(uname -s)
-  sed_prefix="sed -i"
+  sed_prefix=(sed -i)
   if [[ $os == "Darwin" ]]; then
     sed_prefix=(sed -i '')
   fi

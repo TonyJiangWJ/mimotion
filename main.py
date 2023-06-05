@@ -279,5 +279,6 @@ if __name__ == "__main__":
         sleep_seconds = config.get('SLEEP_GAP')
         if sleep_seconds is None or sleep_seconds == '':
             sleep_seconds = 5
+        sleep_seconds = float(sleep_seconds)
         print(f"多账号执行间隔：{sleep_seconds}")
         execute()
