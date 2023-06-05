@@ -26,4 +26,4 @@ jobs:
             CONFIG: ${{ secrets.CONFIG }}
         run: |
           pip3 install requests pytz
-          python3 main.py ${{ secrets.CRON_HOURS }}
+          python3 main.py
