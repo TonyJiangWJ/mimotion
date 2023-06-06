@@ -233,21 +233,25 @@ class MiMotionRunner:
 
 
 # 启动主函数
-def push_to_push_plus(exec_results):
+def push_to_push_plus(exec_results, summary):
     # 判断是否需要pushplus推送
     if PUSH_PLUS_TOKEN is not None and PUSH_PLUS_TOKEN != '' and PUSH_PLUS_TOKEN != 'NO':
         if PUSH_PLUS_HOUR is not None and PUSH_PLUS_HOUR.isdigit():
             if time_bj.hour != int(PUSH_PLUS_HOUR):
                 print(f"当前设置push_plus推送整点为：{PUSH_PLUS_HOUR}, 当前整点为：{time_bj.hour}，跳过推送")
                 return
-        html = '<ul>'
-        for exec_result in exec_results:
-            success = exec_result['success']
-            if success is not None and success is True:
-                html += f'<li><span>账号：{exec_result["user"]}</span>刷步数成功，接口返回：{exec_result["msg"]}</li>'
-            else:
-                html += f'<li><span>账号：{exec_result["user"]}</span>刷步数失败，失败原因：{exec_result["msg"]}</li>'
-        html += '</ul>'
+        html = f'<div>{summary}</div>'
+        if len(exec_results) >= PUSH_PLUS_MAX:
+            html += '<div>账号数量过多，详细情况请前往github actions中查看</div>'
+        else:
+            html += '<ul>'
+            for exec_result in exec_results:
+                success = exec_result['success']
+                if success is not None and success is True:
+                    html += f'<li><span>账号：{exec_result["user"]}</span>刷步数成功，接口返回：{exec_result["msg"]}</li>'
+                else:
+                    html += f'<li><span>账号：{exec_result["user"]}</span>刷步数失败，失败原因：{exec_result["msg"]}</li>'
+            html += '</ul>'
         push_plus(f"{format_now()} 刷步数通知", html)
 
 
@@ -290,7 +294,13 @@ def execute():
                     # 每个账号之间间隔一定时间请求一次，避免接口请求过于频繁导致异常
                     time.sleep(sleep_seconds)
 
-        push_to_push_plus(exec_results)
+        success_count = 0
+        for result in exec_results:
+            if result['success'] is True:
+                success_count += 1
+        summary = f"\n执行账号总数{total}，成功：{success_count}，失败：{total - success_count}"
+        print(summary)
+        push_to_push_plus(exec_results, summary)
     else:
         print(f"账号数长度[{len(user_list)}]和密码数长度[{len(passwd_list)}]不匹配，跳过执行")
         exit(1)
@@ -304,9 +314,16 @@ if __name__ == "__main__":
         exit(1)
     else:
         # region 初始化参数
-        config = dict(json.loads(os.environ.get("CONFIG")))
+        config = dict()
+        try:
+            config = dict(json.loads(os.environ.get("CONFIG")))
+        except:
+            print("CONFIG格式不正确，请检查Secret配置，请严格按照JSON格式：使用双引号包裹字段和值，逗号不能多也不能少")
+            traceback.print_exc()
+            exit(1)
         PUSH_PLUS_TOKEN = config.get('PUSH_PLUS_TOKEN')
         PUSH_PLUS_HOUR = config.get('PUSH_PLUS_HOUR')
+        PUSH_PLUS_MAX = get_int_value_default(config, 'PUSH_PLUS_MAX', 30)
         sleep_seconds = config.get('SLEEP_GAP')
         if sleep_seconds is None or sleep_seconds == '':
             sleep_seconds = 5
