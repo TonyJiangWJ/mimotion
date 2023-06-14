@@ -21,7 +21,7 @@ jobs:
           echo "configed CRON_HOURS ${{ vars.CRON_HOURS }}"
           persist_execute_log ${{ github.event_name }} ${{ vars.CRON_HOURS }}
           git config user.name github-actions
-          git config user.email github-actions@github.com
+          git config user.email github-actions@users.noreply.github.com
           git add .
           current=`TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M:%S'`
           git commit -m "[${current}] random cron trigger by ${{ github.event_name }}"

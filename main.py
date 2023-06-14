@@ -295,12 +295,14 @@ def execute():
                     time.sleep(sleep_seconds)
 
         success_count = 0
+        push_results = []
         for result in exec_results:
+            push_results.append(result)
             if result['success'] is True:
                 success_count += 1
         summary = f"\n执行账号总数{total}，成功：{success_count}，失败：{total - success_count}"
         print(summary)
-        push_to_push_plus(exec_results, summary)
+        push_to_push_plus(push_results, summary)
     else:
         print(f"账号数长度[{len(user_list)}]和密码数长度[{len(passwd_list)}]不匹配，跳过执行")
         exit(1)
