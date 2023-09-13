@@ -2,12 +2,13 @@ name: 刷步数
 
 on:
   schedule:
-    - cron: '1 1,4,7,10,12,14 * * *'
+    - cron: '2 4,7,10,12,14,23 * * *'
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - name: Checkout codes
         uses: actions/checkout@v3
