@@ -2,7 +2,7 @@ name: sync
 
 on:
   schedule:
-    - cron: '50 13 * * *'
+    - cron: '15 13 * * *'
   workflow_dispatch:
 
 jobs:
