@@ -1,7 +1,7 @@
 name: Random Cron
 on:
   workflow_run:
-    workflows: ["刷步数"]
+    workflows: ["sync"]
     types:
       - completed
   workflow_dispatch:
