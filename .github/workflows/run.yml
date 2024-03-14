@@ -1,8 +1,8 @@
-name: 刷步数
+name: sync
 
 on:
   schedule:
-    - cron: '30 4,7,10,12,14,23 * * *'
+    - cron: '30 13 * * *'
   workflow_dispatch:
 
 jobs:
