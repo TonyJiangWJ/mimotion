@@ -4,6 +4,7 @@
 [![GitHub forks](https://img.shields.io/github/forks/TonyJiangWJ/mimotion?style=flat-square)](https://github.com/TonyJiangWJ/mimotion/forks)
 [![GitHub stars](https://img.shields.io/github/stars/TonyJiangWJ/mimotion?style=flat-square)](https://github.com/TonyJiangWJ/mimotion/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues/TonyJiangWJ/mimotion?style=flat-square)](https://github.com/TonyJiangWJ/mimotion/issues)
+[![Page Views Count](https://badges.toozhao.com/badges/01HV8REWHW88Z2QQAK7XZ3Y9ZN/green.svg)](https://badges.toozhao.com/stats/01HV8REWHW88Z2QQAK7XZ3Y9ZN "Get your own page views count badge on badges.toozhao.com")
 
 ## 小米运动自动刷步数（支持邮箱登录）
 
