@@ -2,7 +2,7 @@ name: sync
 
 on:
   schedule:
-    - cron: '13 12,14,16,18,22 * * *'
+    - cron: '53 12,14,16,18,20 * * *'
   workflow_dispatch:
 
 jobs:
