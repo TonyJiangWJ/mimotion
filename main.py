@@ -80,7 +80,8 @@ def push_plus(title, content):
         "title": title,
         "content": content,
         "template": "html",
-        "channel": "wechat"
+        "channel": "webhook",
+        "webhook": "飞书机器人"
     }
     try:
         response = requests.post(requestUrl, data=data)
