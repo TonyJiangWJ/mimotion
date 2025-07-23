@@ -93,33 +93,19 @@ def push_plus(title, content):
         print("pushplus推送异常")
 
 # bark消息推送
-def bark_push(title: str, content: str):
-    """
-    發送一個簡單的 Bark 推送通知。
-
-    Args:
-        title (str): 通知標題。
-        content (str): 通知內容。
-    """
-    # 檢查 device_key 是否已設置
+def bark_push(title: str, content_markdown: str):
     if not BARK_DEVICE_KEY or BARK_DEVICE_KEY == 'YOUR_BARK_DEVICE_KEY_HERE':
-        print("Bark 推送失敗：請設置 BARK_DEVICE_KEY。")
+        print("Bark 推送失败：请设置 BARK_DEVICE_KEY。")
         return
 
-    # 確保 device_key 以 '/' 結尾，方便拼接 URL
-    # 判斷是自建服務器還是官方服務
-    if "http" in BARK_DEVICE_KEY: # 判斷是否為完整的 URL (自建服務器)
-        request_url = f"{BARK_DEVICE_KEY}" # device_key 本身就是 URL
-    else: # 否則視為設備 ID (官方服務)
+    if "http" in BARK_DEVICE_KEY:
+        request_url = f"{BARK_DEVICE_KEY}"
+    else:
         request_url = f"https://api.bark.im/{BARK_DEVICE_KEY}"
 
     data = {
         "title": title,
-        "body": content,
-        # 你可以在這裡添加更多 Bark 參數，例如：
-        # "url": "https://www.google.com",
-        # "sound": "bell",
-        # "group": "MyNotifications"
+        "body": content_markdown,
     }
 
     try:
@@ -129,13 +115,13 @@ def bark_push(title: str, content: str):
             if json_res.get('code') == 200:
                 print(f"Bark 推送成功：{json_res.get('message', '未知訊息')}")
             else:
-                print(f"Bark 推送失敗：{json_res.get('code', '未知錯誤碼')} - {json_res.get('message', '未知錯誤訊息')}")
+                print(f"Bark 推送失败：{json_res.get('code', '未知错误码')} - {json_res.get('message', '未知错误訊息')}")
         else:
-            print(f"Bark 推送失敗：HTTP 狀態碼 {response.status_code}")
+            print(f"Bark 推送失败：HTTP 状态码 {response.status_code}")
     except requests.exceptions.RequestException as e:
-        print(f"Bark 推送異常：{e}")
+        print(f"Bark 推送异常：{e}")
     except Exception as e:
-        print(f"Bark 推送發生未預期錯誤：{e}")
+        print(f"Bark 推送发生未预期错误：{e}")
 
 
 
@@ -299,7 +285,24 @@ def push_to_push_plus(exec_results, summary):
                     html += f'<li><span>账号：{exec_result["user"]}</span>刷步数失败，失败原因：{exec_result["msg"]}</li>'
             html += '</ul>'
         push_plus(f"{format_now()} 刷步数通知", html)
-        bark_push(f"{format_now()} 刷步数通知", html)
+    # --- Bark 推送逻辑 ---
+    # 這裡我們將內容轉化為 Markdown
+    markdown_content_for_bark = f'**{summary}**\n\n' # 用粗體顯示總結
+
+    if len(exec_results) >= PUSH_PLUS_MAX:
+        markdown_content_for_bark += '账号数量过多，详细情况请前往 **GitHub Actions** 中查看。'
+    else:
+        # 使用 Markdown 列表
+        for exec_result in exec_results:
+            success = exec_result['success']
+            if success is not None and success is True:
+                # `**` 用于粗体，`- ` 用于列表项
+                markdown_content_for_bark += f'- 账号：**{exec_result["user"]}** 刷步数成功，接口返回：{exec_result["msg"]}\n'
+            else:
+                markdown_content_for_bark += f'- 账号：**{exec_result["user"]}** 刷步数失败，失败原因：{exec_result["msg"]}\n'
+    
+    # 調用 Bark 推送函數
+    bark_push(f"{format_now()} 刷步数通知", markdown_content_for_bark)
 
 
 def run_single_account(total, idx, user_mi, passwd_mi):
