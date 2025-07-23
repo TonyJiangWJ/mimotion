@@ -92,6 +92,52 @@ def push_plus(title, content):
     except:
         print("pushplus推送异常")
 
+# bark消息推送
+def bark_push(title: str, content: str):
+    """
+    發送一個簡單的 Bark 推送通知。
+
+    Args:
+        title (str): 通知標題。
+        content (str): 通知內容。
+    """
+    # 檢查 device_key 是否已設置
+    if not BARK_DEVICE_KEY or BARK_DEVICE_KEY == 'YOUR_BARK_DEVICE_KEY_HERE':
+        print("Bark 推送失敗：請設置 BARK_DEVICE_KEY。")
+        return
+
+    # 確保 device_key 以 '/' 結尾，方便拼接 URL
+    # 判斷是自建服務器還是官方服務
+    if "http" in BARK_DEVICE_KEY: # 判斷是否為完整的 URL (自建服務器)
+        request_url = f"{BARK_DEVICE_KEY}" # device_key 本身就是 URL
+    else: # 否則視為設備 ID (官方服務)
+        request_url = f"https://api.bark.im/{BARK_DEVICE_KEY}"
+
+    data = {
+        "title": title,
+        "body": content,
+        # 你可以在這裡添加更多 Bark 參數，例如：
+        # "url": "https://www.google.com",
+        # "sound": "bell",
+        # "group": "MyNotifications"
+    }
+
+    try:
+        response = requests.post(request_url, json=data, timeout=5)
+        if response.status_code == 200:
+            json_res = response.json()
+            if json_res.get('code') == 200:
+                print(f"Bark 推送成功：{json_res.get('message', '未知訊息')}")
+            else:
+                print(f"Bark 推送失敗：{json_res.get('code', '未知錯誤碼')} - {json_res.get('message', '未知錯誤訊息')}")
+        else:
+            print(f"Bark 推送失敗：HTTP 狀態碼 {response.status_code}")
+    except requests.exceptions.RequestException as e:
+        print(f"Bark 推送異常：{e}")
+    except Exception as e:
+        print(f"Bark 推送發生未預期錯誤：{e}")
+
+
 
 class MiMotionRunner:
     def __init__(self, _user, _passwd):
@@ -253,6 +299,7 @@ def push_to_push_plus(exec_results, summary):
                     html += f'<li><span>账号：{exec_result["user"]}</span>刷步数失败，失败原因：{exec_result["msg"]}</li>'
             html += '</ul>'
         push_plus(f"{format_now()} 刷步数通知", html)
+        bark_push(f"{format_now()} 刷步数通知", html)
 
 
 def run_single_account(total, idx, user_mi, passwd_mi):
@@ -324,6 +371,7 @@ if __name__ == "__main__":
             traceback.print_exc()
             exit(1)
         PUSH_PLUS_TOKEN = config.get('PUSH_PLUS_TOKEN')
+        BARK_DEVICE_KEY = config.get('BARK_DEVICE_KEY')
         PUSH_PLUS_HOUR = config.get('PUSH_PLUS_HOUR')
         PUSH_PLUS_MAX = get_int_value_default(config, 'PUSH_PLUS_MAX', 30)
         sleep_seconds = config.get('SLEEP_GAP')
