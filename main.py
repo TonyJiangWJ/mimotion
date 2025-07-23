@@ -101,7 +101,7 @@ def bark_push(title: str, content_markdown: str):
     if "http" in BARK_DEVICE_KEY:
         request_url = f"{BARK_DEVICE_KEY}"
     else:
-        request_url = f"https://api.bark.im/{BARK_DEVICE_KEY}"
+        request_url = f"https://api.day.app/{BARK_DEVICE_KEY}"
 
     data = {
         "title": title,
