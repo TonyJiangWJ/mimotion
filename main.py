@@ -287,7 +287,7 @@ def push_to_push_plus(exec_results, summary):
         push_plus(f"{format_now()} 刷步数通知", html)
     # --- Bark 推送逻辑 ---
     # 這裡我們將內容轉化為 Markdown
-    markdown_content_for_bark = f'**{summary}**\n\n' # 用粗體顯示總結
+    # markdown_content_for_bark = f'**{summary}**\n\n' # 用粗體顯示總結
 
     if len(exec_results) >= PUSH_PLUS_MAX:
         markdown_content_for_bark += '账号数量过多，详细情况请前往 **GitHub Actions** 中查看。'
@@ -297,11 +297,12 @@ def push_to_push_plus(exec_results, summary):
             success = exec_result['success']
             if success is not None and success is True:
                 # `**` 用于粗体，`- ` 用于列表项
-                markdown_content_for_bark += f'{exec_result["user"]}{exec_result["msg"]}\n'
+                markdown_content_for_bark = f'{exec_result["msg"]}{exec_result["user"]}\n'
             else:
                 markdown_content_for_bark += f'刷步失败，失败原因：{exec_result["msg"]} 账号：**{exec_result["user"]}**\n'
     
     # 調用 Bark 推送函數
+    markdown_content_for_bark += f'{summary}'
     bark_push(f"{format_now()} 刷步数通知", markdown_content_for_bark)
 
 
