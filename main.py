@@ -297,9 +297,9 @@ def push_to_push_plus(exec_results, summary):
             success = exec_result['success']
             if success is not None and success is True:
                 # `**` 用于粗体，`- ` 用于列表项
-                markdown_content_for_bark += f'- 账号：**{exec_result["user"]}** 刷步数成功，接口返回：{exec_result["msg"]}\n'
+                markdown_content_for_bark += f'刷步成功：{exec_result["msg"]} 账号：**{exec_result["user"]}**\n'
             else:
-                markdown_content_for_bark += f'- 账号：**{exec_result["user"]}** 刷步数失败，失败原因：{exec_result["msg"]}\n'
+                markdown_content_for_bark += f'刷步失败，失败原因：{exec_result["msg"]} 账号：**{exec_result["user"]}**\n'
     
     # 調用 Bark 推送函數
     bark_push(f"{format_now()} 刷步数通知", markdown_content_for_bark)
