@@ -297,7 +297,7 @@ def push_to_push_plus(exec_results, summary):
             success = exec_result['success']
             if success is not None and success is True:
                 # `**` 用于粗体，`- ` 用于列表项
-                markdown_content_for_bark += f'刷步成功：{exec_result["msg"]} 账号：**{exec_result["user"]}**\n'
+                markdown_content_for_bark += f'{exec_result["user"]}{exec_result["msg"]}\n'
             else:
                 markdown_content_for_bark += f'刷步失败，失败原因：{exec_result["msg"]} 账号：**{exec_result["user"]}**\n'
     
