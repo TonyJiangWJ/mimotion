@@ -261,7 +261,7 @@ class MiMotionRunner:
 
         response = requests.post(url, data=data, headers=head).json()
         # print(response)
-        return f"修改步数（{step}）[" + response['message'] + "]", True
+        return f"步数（{step}）[" + response['message'] + "]", True
 
 
 # 启动主函数
@@ -299,11 +299,11 @@ def push_to_push_plus(exec_results, summary):
                 # `**` 用于粗体，`- ` 用于列表项
                 markdown_content_for_bark = f'{exec_result["msg"]}{exec_result["user"]}\n'
             else:
-                markdown_content_for_bark += f'刷步失败，失败原因：{exec_result["msg"]} 账号：**{exec_result["user"]}**\n'
+                markdown_content_for_bark += f'步数更新失败，失败原因：{exec_result["msg"]} 账号：**{exec_result["user"]}**\n'
     
     # 調用 Bark 推送函數
     markdown_content_for_bark += f'{summary}'
-    bark_push(f"{format_now()} 刷步数通知", markdown_content_for_bark)
+    bark_push(f"{format_now()} 步数更新通知", markdown_content_for_bark)
 
 
 def run_single_account(total, idx, user_mi, passwd_mi):
