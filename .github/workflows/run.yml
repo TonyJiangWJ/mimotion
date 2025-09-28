@@ -26,5 +26,5 @@ jobs:
         env:
             CONFIG: ${{ secrets.CONFIG }}
         run: |
-          pip3 install requests pytz
+          pip3 install requests pytz pycryptodome
           python3 main.py
