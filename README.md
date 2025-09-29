@@ -4,12 +4,14 @@
 [![GitHub forks](https://img.shields.io/github/forks/TonyJiangWJ/mimotion?style=flat-square)](https://github.com/TonyJiangWJ/mimotion/forks)
 [![GitHub stars](https://img.shields.io/github/stars/TonyJiangWJ/mimotion?style=flat-square)](https://github.com/TonyJiangWJ/mimotion/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues/TonyJiangWJ/mimotion?style=flat-square)](https://github.com/TonyJiangWJ/mimotion/issues)
-[![Page Views Count](https://badges.toozhao.com/badges/01HV8REWHW88Z2QQAK7XZ3Y9ZN/green.svg)](https://badges.toozhao.com/stats/01HV8REWHW88Z2QQAK7XZ3Y9ZN "Get your own page views count badge on badges.toozhao.com")
+
 
 ## 小米运动自动刷步数（支持邮箱登录）
 
 - 小米运动自动刷步数，小米运动APP现已改名 `Zepp Life`，为方便说明，后面还是称其为小米运动。但下载注册时请搜索 `Zepp Life`。
-- 注册账号后建议先去以下网站测试自己的账号刷步数是否正常：[出去走走：https://motion.faithxy.com/](https://bushu.faithxy.com/) 不是广告啊 不建议在上面花钱购买
+- 注册账号后建议先去以下网站测试自己的账号刷步数是否正常（注意这些网站只是网络上收集的，不保证安全和有效性）：
+  - https://steps.hubp.de/ 提示密码错误时可以多试几次 或者切换网络
+  - https://bs.yanwan.store/run4/ 验证码001或998
 - 如无法刷步数同步到支付宝等，建议重新注册一个新的。
 
 ### 如果觉得好用，请给一个免费的[star](https://github.com/TonyJiangWJ/mimotion/)吧
@@ -132,6 +134,8 @@
 
 本项目基于 `https://github.com/xunichanghuan/mimotion(已被ban)` 和 [https://github.com/huangshihai/mimotion](https://github.com/huangshihai/mimotion) 项目修改，特此感谢
 
+新版本登录需要加密，感谢[https://github.com/hanximeng/Zepp_API/blob/main/index.php](https://github.com/hanximeng/Zepp_API/blob/main/index.php) 里面提供的aes加密密钥。大家可以去给作者点个star
+
 ### 七、同步最新代码
 
 - 点击仓库界面上的 `Sync fork`，找不到的话直接Ctrl+F网页查找
@@ -158,6 +162,8 @@
 8. 最大步数和最小步数随着时间增长，10点执行时范围为10/22 \* 18000 ~ 10/22 \* 25000：8181 ~ 11363，以此类推，在北京时间22点达到最大值，即22点执行时随机步数的范围为18000-25000之间。要修改这个范围可以修改CONFIG中的MIN_STEP和MAX_STEP。
 
 9. cron的执行根据github actions的资源进行排队，并不是百分百按指定的时间进行运行，请知悉。
+
+10. 新版本接口有限制，同ip登录过多账号可能会429，请自行测试。
 
 ### 查看执行记录
 
