@@ -345,9 +345,7 @@ if __name__ == "__main__":
         config = dict()
         raw = os.getenv("CONFIG")
         if not raw:
-        raise EnvironmentError(
-            "环境变量 CONFIG 未设置或为空，请在运行前配置有效的 JSON 字符串。"
-        )
+            print("环境变量 CONFIG 未设置或为空，请在运行前配置有效的 JSON 字符串。")
         try:
             print(f"CONFIG::{raw}")
             config = dict(json.loads(os.environ.get("CONFIG")))
