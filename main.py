@@ -343,8 +343,13 @@ if __name__ == "__main__":
     else:
         # region 初始化参数
         config = dict()
+        raw = os.getenv("CONFIG")
+        if not raw:
+        raise EnvironmentError(
+            "环境变量 CONFIG 未设置或为空，请在运行前配置有效的 JSON 字符串。"
+        )
         try:
-            print(f'CONFIG::{os.environ.get("CONFIG")}')
+            print(f"CONFIG::{raw}")
             config = dict(json.loads(os.environ.get("CONFIG")))
         except:
             print("CONFIG格式不正确，请检查Secret配置，请严格按照JSON格式：使用双引号包裹字段和值，逗号不能多也不能少")
