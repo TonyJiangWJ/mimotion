@@ -127,7 +127,7 @@ class MiMotionRunner:
             self.is_phone = False
         self.user = user
         self.fake_ip_addr = fake_ip()
-        self.log_str += f"创建虚拟ip地址：{self.fake_ip_addr}\n"
+        # self.log_str += f"创建虚拟ip地址：{self.fake_ip_addr}\n"
 
     # 登录
     def login(self):
@@ -139,8 +139,7 @@ class MiMotionRunner:
             "appname": "com.xiaomi.hm.health",
             "appplatform": "android_phone",
             "x-hm-ekv": "1",
-            "hm-privacy-ceip": "false",
-            "X-Forwarded-For": self.fake_ip_addr
+            "hm-privacy-ceip": "false"
         }
 
         login_data = {
@@ -160,8 +159,11 @@ class MiMotionRunner:
 
         url1 = 'https://api-user.zepp.com/v2/registrations/tokens'
         r1 = requests.post(url1, data=cipher_data, headers=headers, allow_redirects=False)
-        location = r1.headers["Location"]
+        if r1.status_code != 303:
+            self.log_str += "登录异常，status: %d\n" % r1.status_code
+            return 0, 0
         try:
+            location = r1.headers["Location"]
             code = get_access_token(location)
             if code is None:
                 self.log_str += "获取accessToken失败\n"
@@ -213,7 +215,7 @@ class MiMotionRunner:
     # 获取app_token
     def get_app_token(self, login_token):
         url = f"https://account-cn.huami.com/v1/client/app_tokens?app_name=com.xiaomi.hm.health&dn=api-user.huami.com%2Capi-mifit.huami.com%2Capp-analytics.huami.com&login_token={login_token}"
-        headers = {'User-Agent': 'MiFit/5.3.0 (iPhone; iOS 14.7.1; Scale/3.00)', 'X-Forwarded-For': self.fake_ip_addr}
+        headers = {'User-Agent': 'MiFit/5.3.0 (iPhone; iOS 14.7.1; Scale/3.00)'}
         response = requests.get(url, headers=headers).json()
         app_token = response['token_info']['app_token']
         # print("app_token获取成功！")
@@ -246,8 +248,7 @@ class MiMotionRunner:
         url = f'https://api-mifit-cn.huami.com/v1/data/band_data.json?&t={t}'
         head = {
             "apptoken": app_token,
-            "Content-Type": "application/x-www-form-urlencoded",
-            "X-Forwarded-For": self.fake_ip_addr
+            "Content-Type": "application/x-www-form-urlencoded"
         }
 
         data = f'userid={userid}&last_sync_data_time=1597306380&device_type=0&last_deviceid=DA932FFFFE8816E7&data_json={data_json}'
