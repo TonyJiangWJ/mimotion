@@ -2,7 +2,8 @@ name: 刷步数
 
 on:
   schedule:
-    - cron: '0 0,2,4,6,8,14 * * *'
+
+    - cron: '11 1,4,7,10,12,14 * * *'
   workflow_dispatch:
 
 jobs:
@@ -26,5 +27,5 @@ jobs:
         env:
             CONFIG: ${{ secrets.CONFIG }}
         run: |
-          pip3 install requests pytz
+          pip3 install requests pytz pycryptodome
           python3 main.py
