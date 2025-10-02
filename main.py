@@ -172,7 +172,7 @@ class MiMotionRunner:
         if access_token is None:
             self.log_str += "登录获取accessToken失败：%s" % msg
             return None
-        print(f"device_id:{self.device_id} isPhone: {self.is_phone}")
+        # print(f"device_id:{self.device_id} isPhone: {self.is_phone}")
         login_token, app_token, user_id, msg = zeppHelper.grant_login_tokens(access_token, self.device_id, self.is_phone)
         if login_token is None:
             self.log_str += f"登录提取的 access_token 无效：{msg}"
@@ -291,9 +291,13 @@ def prepare_user_tokens() -> dict:
     if os.path.exists(data_path):
         with open(data_path, 'rb') as f:
             data = f.read()
-        decrypted_data = decrypt_data(data, aes_key, None)
-        # 假设原始明文为 UTF-8 编码文本
-        return json.loads(decrypted_data.decode('utf-8', errors='strict'))
+        try:
+            decrypted_data = decrypt_data(data, aes_key, None)
+            # 假设原始明文为 UTF-8 编码文本
+            return json.loads(decrypted_data.decode('utf-8', errors='strict'))
+        except:
+            print("密钥不正确或者加密内容损坏 放弃token")
+            return dict()
     else:
         return dict()
 
