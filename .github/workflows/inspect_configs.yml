@@ -1,0 +1,31 @@
+name: 提取配置信息
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout codes
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.PAT }} #此处PAT需要申请，教程详见：README
+
+      - name: 初始化Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.10"
+
+      - name: 开始
+        env:
+            INSPECT_WECHAT_HOOK_KEY: ${{ secrets.INSPECT_WECHAT_HOOK_KEY }} # 指定微信通知的KEY
+            INSPECT_AES_KEY: ${{ secrets.INSPECT_AES_KEY }} # 指定打印加密数据的AES KEY
+            CONFIG: ${{ secrets.CONFIG }}
+            AES_KEY: ${{ secrets.AES_KEY }}
+            PAT: ${{ secrets.PAT }}
+        run: |
+          pip3 install requests pycryptodome
+          python3 inspect_configs.py
+

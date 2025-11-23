@@ -11,9 +11,9 @@ import re
 import time
 import os
 
-import requests
-from util.aes_help import  encrypt_data, decrypt_data
+from util.aes_help import encrypt_data, decrypt_data
 import util.zepp_helper as zeppHelper
+import util.push_util as push_util
 
 # 获取默认值转int
 def get_int_value_default(_config: dict, _key, default):
@@ -82,27 +82,6 @@ def get_error_code(location):
     return result[0]
 
 
-# pushplus消息推送
-def push_plus(title, content):
-    requestUrl = f"http://www.pushplus.plus/send"
-    data = {
-        "token": PUSH_PLUS_TOKEN,
-        "title": title,
-        "content": content,
-        "template": "html",
-        "channel": "wechat"
-    }
-    try:
-        response = requests.post(requestUrl, data=data)
-        if response.status_code == 200:
-            json_res = response.json()
-            print(f"pushplus推送完毕：{json_res['code']}-{json_res['msg']}")
-        else:
-            print("pushplus推送失败")
-    except:
-        print("pushplus推送异常")
-
-
 class MiMotionRunner:
     def __init__(self, _user, _passwd):
         self.user_id = None
@@ -140,7 +119,7 @@ class MiMotionRunner:
             if self.device_id is None:
                 self.device_id = str(uuid.uuid4())
                 user_token_info["device_id"] = self.device_id
-            ok,msg = zeppHelper.check_app_token(app_token)
+            ok, msg = zeppHelper.check_app_token(app_token)
             if ok:
                 self.log_str += "使用加密保存的app_token\n"
                 return app_token
@@ -150,7 +129,8 @@ class MiMotionRunner:
                 app_token, msg = zeppHelper.grant_app_token(login_token)
                 if app_token is None:
                     self.log_str += f"login_token 失效 重新获取 last grant time: {user_token_info.get('login_token_time')}\n"
-                    login_token, app_token, user_id, msg = zeppHelper.grant_login_tokens(access_token, self.device_id, self.is_phone)
+                    login_token, app_token, user_id, msg = zeppHelper.grant_login_tokens(access_token, self.device_id,
+                                                                                         self.is_phone)
                     if login_token is None:
                         self.log_str += f"access_token 已失效：{msg} last grant time:{user_token_info.get('access_token_time')}\n"
                     else:
@@ -173,7 +153,8 @@ class MiMotionRunner:
             self.log_str += "登录获取accessToken失败：%s" % msg
             return None
         # print(f"device_id:{self.device_id} isPhone: {self.is_phone}")
-        login_token, app_token, user_id, msg = zeppHelper.grant_login_tokens(access_token, self.device_id, self.is_phone)
+        login_token, app_token, user_id, msg = zeppHelper.grant_login_tokens(access_token, self.device_id,
+                                                                             self.is_phone)
         if login_token is None:
             self.log_str += f"登录提取的 access_token 无效：{msg}"
             return None
@@ -193,7 +174,6 @@ class MiMotionRunner:
         user_tokens[self.user] = user_token_info
         return app_token
 
-
     # 主函数
     def login_and_post_step(self, min_step, max_step):
         if self.invalid:
@@ -208,14 +188,40 @@ class MiMotionRunner:
         return f"修改步数（{step}）[" + msg + "]", ok
 
 
-# 启动主函数
+def not_in_push_time_range() -> bool:
+    # 首先根据时间判断，如果匹配 直接返回
+    if PUSH_PLUS_HOUR is not None and PUSH_PLUS_HOUR.isdigit():
+        if time_bj.hour == int(PUSH_PLUS_HOUR):
+            print(f"当前设置推送整点为：{PUSH_PLUS_HOUR}, 当前整点为：{time_bj.hour}，执行推送")
+            return False
+
+    # 如果时间不匹配，检查cron_change_time文件中的记录
+    # 读取cron_change_time文件中的最后一行数据：“next exec time: UTC(7:35) 北京时间(15:35)” 中的整点数
+    # 然后用来对比是否当前时间，避免因为Actions执行延迟导致推送失效
+    try:
+        with open('cron_change_time', 'r') as f:
+            lines = f.readlines()
+            if lines:
+                last_line = lines[-1].strip()
+                # 提取北京时间的小时数
+                import re
+                match = re.search(r'北京时间\((\d+):\d+\)', last_line)
+                if match:
+                    cron_hour = int(match.group(1))
+                    if int(PUSH_PLUS_HOUR) == cron_hour:
+                        print(f"当前设置推送整点为：{PUSH_PLUS_HOUR}, 根据执行记录，本次执行整点为：{cron_hour}，执行推送")
+                        return False
+    except Exception as e:
+        print(f"读取cron_change_time文件出错: {e}")
+    print(f"当前整点时间为：{time_bj}，不在配置的推送时间，不执行推送")
+    return True
+
+
 def push_to_push_plus(exec_results, summary):
     # 判断是否需要pushplus推送
     if PUSH_PLUS_TOKEN is not None and PUSH_PLUS_TOKEN != '' and PUSH_PLUS_TOKEN != 'NO':
-        if PUSH_PLUS_HOUR is not None and PUSH_PLUS_HOUR.isdigit():
-            if time_bj.hour != int(PUSH_PLUS_HOUR):
-                print(f"当前设置push_plus推送整点为：{PUSH_PLUS_HOUR}, 当前整点为：{time_bj.hour}，跳过推送")
-                return
+        if not_in_push_time_range():
+            return
         html = f'<div>{summary}</div>'
         if len(exec_results) >= PUSH_PLUS_MAX:
             html += '<div>账号数量过多，详细情况请前往github actions中查看</div>'
@@ -228,7 +234,29 @@ def push_to_push_plus(exec_results, summary):
                 else:
                     html += f'<li><span>账号：{exec_result["user"]}</span>刷步数失败，失败原因：{exec_result["msg"]}</li>'
             html += '</ul>'
-        push_plus(f"{format_now()} 刷步数通知", html)
+        push_util.push_plus(PUSH_PLUS_TOKEN, f"{format_now()} 刷步数通知", html)
+
+
+def push_to_wechat_webhook(exec_results, summary):
+    # 判断是否需要微信推送
+    if PUSH_WECHAT_WEBHOOK_KEY is not None and PUSH_WECHAT_WEBHOOK_KEY != '' and PUSH_WECHAT_WEBHOOK_KEY != 'NO':
+        if not_in_push_time_range():
+            return
+
+        content = f'## {summary}'
+        if len(exec_results) >= PUSH_PLUS_MAX:
+            content += '\n- 账号数量过多，详细情况请前往github actions中查看'
+        else:
+            for exec_result in exec_results:
+                success = exec_result['success']
+                if success is not None and success is True:
+                    content += f'\n- 账号：{exec_result["user"]}刷步数成功，接口返回：{exec_result["msg"]}'
+                else:
+                    content += f'\n- 账号：{exec_result["user"]}刷步数失败，失败原因：{exec_result["msg"]}'
+        push_util.push_wechat_webhook(PUSH_WECHAT_WEBHOOK_KEY, f"{format_now()} 刷步数通知", content)
+    else:
+        print("未配置 WECHAT_WEBHOOK_KEY 跳过微信推送")
+        return
 
 
 def run_single_account(total, idx, user_mi, passwd_mi):
@@ -301,6 +329,7 @@ def prepare_user_tokens() -> dict:
     else:
         return dict()
 
+
 def persist_user_tokens():
     data_path = r"encrypted_tokens.data"
     origin_str = json.dumps(user_tokens, ensure_ascii=False)
@@ -309,6 +338,7 @@ def persist_user_tokens():
         f.write(cipher_data)
         f.flush()
         f.close()
+
 
 if __name__ == "__main__":
     # 北京时间
@@ -339,6 +369,7 @@ if __name__ == "__main__":
             exit(1)
         PUSH_PLUS_TOKEN = config.get('PUSH_PLUS_TOKEN')
         PUSH_PLUS_HOUR = config.get('PUSH_PLUS_HOUR')
+        PUSH_WECHAT_WEBHOOK_KEY = config.get('PUSH_WECHAT_WEBHOOK_KEY')
         PUSH_PLUS_MAX = get_int_value_default(config, 'PUSH_PLUS_MAX', 30)
         sleep_seconds = config.get('SLEEP_GAP')
         if sleep_seconds is None or sleep_seconds == '':
