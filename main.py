@@ -188,77 +188,6 @@ class MiMotionRunner:
         return f"修改步数（{step}）[" + msg + "]", ok
 
 
-def not_in_push_time_range() -> bool:
-    # 首先根据时间判断，如果匹配 直接返回
-    if PUSH_PLUS_HOUR is not None and PUSH_PLUS_HOUR.isdigit():
-        if time_bj.hour == int(PUSH_PLUS_HOUR):
-            print(f"当前设置推送整点为：{PUSH_PLUS_HOUR}, 当前整点为：{time_bj.hour}，执行推送")
-            return False
-
-    # 如果时间不匹配，检查cron_change_time文件中的记录
-    # 读取cron_change_time文件中的最后一行数据：“next exec time: UTC(7:35) 北京时间(15:35)” 中的整点数
-    # 然后用来对比是否当前时间，避免因为Actions执行延迟导致推送失效
-    try:
-        with open('cron_change_time', 'r') as f:
-            lines = f.readlines()
-            if lines:
-                last_line = lines[-1].strip()
-                # 提取北京时间的小时数
-                import re
-                match = re.search(r'北京时间\((\d+):\d+\)', last_line)
-                if match:
-                    cron_hour = int(match.group(1))
-                    if int(PUSH_PLUS_HOUR) == cron_hour:
-                        print(f"当前设置推送整点为：{PUSH_PLUS_HOUR}, 根据执行记录，本次执行整点为：{cron_hour}，执行推送")
-                        return False
-    except Exception as e:
-        print(f"读取cron_change_time文件出错: {e}")
-    print(f"当前整点时间为：{time_bj}，不在配置的推送时间，不执行推送")
-    return True
-
-
-def push_to_push_plus(exec_results, summary):
-    # 判断是否需要pushplus推送
-    if PUSH_PLUS_TOKEN is not None and PUSH_PLUS_TOKEN != '' and PUSH_PLUS_TOKEN != 'NO':
-        if not_in_push_time_range():
-            return
-        html = f'<div>{summary}</div>'
-        if len(exec_results) >= PUSH_PLUS_MAX:
-            html += '<div>账号数量过多，详细情况请前往github actions中查看</div>'
-        else:
-            html += '<ul>'
-            for exec_result in exec_results:
-                success = exec_result['success']
-                if success is not None and success is True:
-                    html += f'<li><span>账号：{exec_result["user"]}</span>刷步数成功，接口返回：{exec_result["msg"]}</li>'
-                else:
-                    html += f'<li><span>账号：{exec_result["user"]}</span>刷步数失败，失败原因：{exec_result["msg"]}</li>'
-            html += '</ul>'
-        push_util.push_plus(PUSH_PLUS_TOKEN, f"{format_now()} 刷步数通知", html)
-
-
-def push_to_wechat_webhook(exec_results, summary):
-    # 判断是否需要微信推送
-    if PUSH_WECHAT_WEBHOOK_KEY is not None and PUSH_WECHAT_WEBHOOK_KEY != '' and PUSH_WECHAT_WEBHOOK_KEY != 'NO':
-        if not_in_push_time_range():
-            return
-
-        content = f'## {summary}'
-        if len(exec_results) >= PUSH_PLUS_MAX:
-            content += '\n- 账号数量过多，详细情况请前往github actions中查看'
-        else:
-            for exec_result in exec_results:
-                success = exec_result['success']
-                if success is not None and success is True:
-                    content += f'\n- 账号：{exec_result["user"]}刷步数成功，接口返回：{exec_result["msg"]}'
-                else:
-                    content += f'\n- 账号：{exec_result["user"]}刷步数失败，失败原因：{exec_result["msg"]}'
-        push_util.push_wechat_webhook(PUSH_WECHAT_WEBHOOK_KEY, f"{format_now()} 刷步数通知", content)
-    else:
-        print("未配置 WECHAT_WEBHOOK_KEY 跳过微信推送")
-        return
-
-
 def run_single_account(total, idx, user_mi, passwd_mi):
     idx_info = ""
     if idx is not None:
@@ -308,8 +237,7 @@ def execute():
                 success_count += 1
         summary = f"\n执行账号总数{total}，成功：{success_count}，失败：{total - success_count}"
         print(summary)
-        push_to_push_plus(push_results, summary)
-        push_to_wechat_webhook(push_results, summary)
+        push_util.push_results(push_results, summary, push_config)
     else:
         print(f"账号数长度[{len(user_list)}]和密码数长度[{len(passwd_list)}]不匹配，跳过执行")
         exit(1)
@@ -368,10 +296,15 @@ if __name__ == "__main__":
             print("CONFIG格式不正确，请检查Secret配置，请严格按照JSON格式：使用双引号包裹字段和值，逗号不能多也不能少")
             traceback.print_exc()
             exit(1)
-        PUSH_PLUS_TOKEN = config.get('PUSH_PLUS_TOKEN')
-        PUSH_PLUS_HOUR = config.get('PUSH_PLUS_HOUR')
-        PUSH_WECHAT_WEBHOOK_KEY = config.get('PUSH_WECHAT_WEBHOOK_KEY')
-        PUSH_PLUS_MAX = get_int_value_default(config, 'PUSH_PLUS_MAX', 30)
+        # 创建推送配置对象
+        push_config = push_util.PushConfig(
+            push_plus_token=config.get('PUSH_PLUS_TOKEN'),
+            push_plus_hour=config.get('PUSH_PLUS_HOUR'),
+            push_plus_max=get_int_value_default(config, 'PUSH_PLUS_MAX', 30),
+            push_wechat_webhook_key=config.get('PUSH_WECHAT_WEBHOOK_KEY'),
+            telegram_bot_token=config.get('TELEGRAM_BOT_TOKEN'),
+            telegram_chat_id=config.get('TELEGRAM_CHAT_ID')
+        )
         sleep_seconds = config.get('SLEEP_GAP')
         if sleep_seconds is None or sleep_seconds == '':
             sleep_seconds = 5

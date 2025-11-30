@@ -19,6 +19,20 @@ def build_inspect_configs_content(config_param, aes_key_param, pat_param):
     return f"""## CONFIG:\n{config_content}\n\n## PAT:\n{pat_content}\n\n## AES_KEY:\n{aes_content}"""
 
 
+def build_inspect_configs_content_for_telegram(config_param, aes_key_param, pat_param):
+    if aes_key_param is None or aes_key_param == "":
+        aes_content = "<blockquote>未配置AES_KEY</blockquote>\n"
+    else:
+        aes_content = f"<b>AES_KEY:</b>\n<pre>{aes_key_param}</pre>\n"
+
+    if pat_param is None or pat_param == "":
+        pat_content = "<blockquote>未配置PAT</blockquote>\n"
+    else:
+        pat_content = f"<b>PAT:</b>\n<pre>{pat_param}</pre>\n"
+    config_content = f"<b>CONFIG:</b>\n<pre>{config_param}</pre>"
+    return f"{aes_content}{pat_content}{config_content}"
+
+
 def display_content_by_aes(inspect_aes_key, config, aes_key, pat):
     """
     使用AES_KEY进行加密，然后推送到微信
@@ -52,6 +66,7 @@ if __name__ == "__main__":
     config = os.environ.get("CONFIG")
     aes_key = os.environ.get("AES_KEY")
     pat = os.environ.get("PAT")
+    # 直接打印
     aes_inspect_key = os.environ.get("INSPECT_AES_KEY")
     if aes_inspect_key is not None and aes_inspect_key != "":
         aes_inspect_key = aes_inspect_key.encode('utf-8')
@@ -61,9 +76,20 @@ if __name__ == "__main__":
             print("INSPECT_AES_KEY 长度必须为16位")
     else:
         print("未配置 INSPECT_AES_KEY 跳过配置信息打印")
+
+    # 推送到微信
     wechat_push_key = os.environ.get("INSPECT_WECHAT_HOOK_KEY")
     if wechat_push_key is None or wechat_push_key == "":
         print("未配置 INSPECT_WECHAT_HOOK_KEY 无法推送配置信息")
-        exit(1)
-    push_util.push_wechat_webhook(wechat_push_key, "提取配置信息",
-                                  build_inspect_configs_content(config, aes_key, pat))
+    else:
+        push_util.push_wechat_webhook(wechat_push_key, "提取配置信息",
+                                      build_inspect_configs_content(config, aes_key, pat))
+
+    # 推送到telegram
+    telegram_bot_token = os.environ.get("INSPECT_TELEGRAM_BOT_TOKEN")
+    telegram_chat_id = os.environ.get("INSPECT_TELEGRAM_CHAT_ID")
+    if telegram_bot_token is None or telegram_bot_token == "" or telegram_chat_id is None or telegram_chat_id == "":
+        print("未配置 INSPECT_TELEGRAM_BOT_TOKEN 或 INSPECT_TELEGRAM_CHAT_ID 跳过telegram推送")
+    else:
+        push_util.push_telegram_bot(telegram_bot_token, telegram_chat_id,
+                                    build_inspect_configs_content_for_telegram(config, aes_key, pat))

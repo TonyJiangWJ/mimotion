@@ -21,6 +21,8 @@ jobs:
       - name: 开始
         env:
             INSPECT_WECHAT_HOOK_KEY: ${{ secrets.INSPECT_WECHAT_HOOK_KEY }} # 指定微信通知的KEY
+            INSPECT_TELEGRAM_BOT_TOKEN: ${{ secrets.INSPECT_TELEGRAM_BOT_TOKEN }} # 指定telegram推送机器人的token
+            INSPECT_TELEGRAM_CHAT_ID: ${{ secrets.INSPECT_TELEGRAM_CHAT_ID }} # 指定telegram推送chatId
             INSPECT_AES_KEY: ${{ secrets.INSPECT_AES_KEY }} # 指定打印加密数据的AES KEY
             CONFIG: ${{ secrets.CONFIG }}
             AES_KEY: ${{ secrets.AES_KEY }}
