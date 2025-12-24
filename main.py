@@ -208,8 +208,6 @@ def run_single_account(total, idx, user_mi, passwd_mi):
     print(log_str)
     return exec_result
 
-    # 登录
-    def login(self):
 
 def execute():
     user_list = users.split('#')
@@ -260,20 +258,6 @@ def prepare_user_tokens() -> dict:
     else:
         return dict()
 
-        login_data = {
-            'emailOrPhone': self.user,
-            'password': self.password,
-            'state': 'REDIRECTION',
-            'client_id': 'HuaMi',
-            'country_code': 'CN',
-            'token': 'access',
-            'redirect_uri': 'https://s3-us-west-2.amazonaws.com/hm-registration/successsignin.html',
-        }
-        # 等同 http_build_query，默认使用 quote_plus 将空格转为 '+'
-        query = urllib.parse.urlencode(login_data)
-        plaintext = query.encode('utf-8')
-        # 执行请求加密
-        cipher_data = encrypt_data(plaintext)
 
 def persist_user_tokens():
     data_path = r"encrypted_tokens.data"
