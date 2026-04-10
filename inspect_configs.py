@@ -93,3 +93,12 @@ if __name__ == "__main__":
     else:
         push_util.push_telegram_bot(telegram_bot_token, telegram_chat_id,
                                     build_inspect_configs_content_for_telegram(config, aes_key, pat))
+    #新增
+    # 推送到 Server酱（微信）
+    server_chan_sendkey = os.environ.get("INSPECT_SERVER_CHAN_SENDKEY")
+    if server_chan_sendkey is None or server_chan_sendkey == "":
+        print("未配置 INSPECT_SERVER_CHAN_SENDKEY 无法推送配置信息")
+    else:
+        # 复用 build_inspect_configs_content 构建内容（纯文本或 Markdown 均可）
+        content = build_inspect_configs_content(config, aes_key, pat)
+        push_util.push_server_chan(server_chan_sendkey, "提取配置信息", content)
