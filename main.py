@@ -21,16 +21,48 @@ def get_int_value_default(_config: dict, _key, default):
     return int(_config.get(_key))
 
 
-# 获取当前时间对应的最大和最小步数
-def get_min_max_by_time(hour=None, minute=None):
-    if hour is None:
-        hour = time_bj.hour
-    if minute is None:
-        minute = time_bj.minute
-    time_rate = min((hour * 60 + minute) / (22 * 60), 1)
+def get_incremental_step(user_key):
+    now = get_beijing_time()
+    today_str = now.strftime("%Y-%m-%d")
     min_step = get_int_value_default(config, 'MIN_STEP', 18000)
     max_step = get_int_value_default(config, 'MAX_STEP', 25000)
-    return int(time_rate * min_step), int(time_rate * max_step)
+
+    step_key = f"step_{user_key}"
+    step_info = user_tokens.get(step_key, {})
+    last_date = step_info.get("date")
+    last_step = step_info.get("step", 0)
+    last_minute = step_info.get("minute", 0)
+
+    current_minute = now.hour * 60 + now.minute
+
+    if last_date != today_str:
+        last_step = 0
+        last_minute = 0
+
+    elapsed = max(current_minute - last_minute, 1)
+
+    day_seed = int(today_str.replace("-", "")) + hash(user_key) % 10000
+    rng = random.Random(day_seed)
+    daily_target = rng.randint(min_step, max_step)
+
+    active_minutes = 16 * 60
+    avg_per_min = daily_target / active_minutes
+
+    increment = int(elapsed * avg_per_min * random.uniform(0.6, 1.4))
+    increment = max(increment, random.randint(50, 200))
+
+    new_step = min(last_step + increment, max_step)
+
+    if now.hour >= 22 and last_step > 0:
+        new_step = min(last_step + random.randint(10, 100), max_step)
+
+    user_tokens[step_key] = {
+        "date": today_str,
+        "step": new_step,
+        "minute": current_minute
+    }
+
+    return last_step, new_step, daily_target
 
 
 # 虚拟ip地址
@@ -174,18 +206,18 @@ class MiMotionRunner:
         user_tokens[self.user] = user_token_info
         return app_token
 
-    # 主函数
-    def login_and_post_step(self, min_step, max_step):
+    def login_and_post_step(self):
         if self.invalid:
             return "账号或密码配置有误", False
         app_token = self.login()
         if app_token is None:
             return "登陆失败！", False
 
-        step = str(random.randint(min_step, max_step))
-        self.log_str += f"已设置为随机步数范围({min_step}~{max_step}) 随机值:{step}\n"
-        ok, msg = zeppHelper.post_fake_brand_data(step, app_token, self.user_id)
-        return f"修改步数（{step}）[" + msg + "]", ok
+        last_step, step, daily_target = get_incremental_step(self.user)
+        step_str = str(step)
+        self.log_str += f"今日目标:{daily_target} 上次步数:{last_step} 本次步数:{step_str}\n"
+        ok, msg = zeppHelper.post_fake_brand_data(step_str, app_token, self.user_id)
+        return f"修改步数（{step_str}）[" + msg + "]", ok
 
 
 def run_single_account(total, idx, user_mi, passwd_mi):
@@ -195,7 +227,7 @@ def run_single_account(total, idx, user_mi, passwd_mi):
     log_str = f"[{format_now()}]\n{idx_info}账号：{desensitize_user_name(user_mi)}\n"
     try:
         runner = MiMotionRunner(user_mi, passwd_mi)
-        exec_msg, success = runner.login_and_post_step(min_step, max_step)
+        exec_msg, success = runner.login_and_post_step()
         log_str += runner.log_str
         log_str += f'{exec_msg}\n'
         exec_result = {"user": user_mi, "success": success,
@@ -314,7 +346,6 @@ if __name__ == "__main__":
         if users is None or passwords is None:
             print("未正确配置账号密码，无法执行")
             exit(1)
-        min_step, max_step = get_min_max_by_time()
         use_concurrent = config.get('USE_CONCURRENT')
         if use_concurrent is not None and use_concurrent == 'True':
             use_concurrent = True
