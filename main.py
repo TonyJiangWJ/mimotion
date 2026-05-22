@@ -25,7 +25,7 @@ def get_incremental_step(user_key):
     now = get_beijing_time()
     today_str = now.strftime("%Y-%m-%d")
     min_step = get_int_value_default(config, 'MIN_STEP', 18000)
-    max_step = get_int_value_default(config, 'MAX_STEP', 25000)
+    max_step = get_int_value_default(config, 'MAX_STEP', 26389)
 
     step_key = f"step_{user_key}"
     step_info = user_tokens.get(step_key, {})
