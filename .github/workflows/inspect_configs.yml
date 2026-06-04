@@ -28,6 +28,6 @@ jobs:
             AES_KEY: ${{ secrets.AES_KEY }}
             PAT: ${{ secrets.PAT }}
         run: |
-          pip3 install requests pycryptodome
+          pip3 install requests pycryptodome pytz
           python3 inspect_configs.py
 
