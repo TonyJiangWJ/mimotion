@@ -6,15 +6,18 @@ on:
       - completed
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   repo-sync:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
         with:
-          token: ${{ secrets.PAT }} #此处PAT需要申请，教程详见：README
+          token: ${{ github.token }}
       - name: random cron
         run: |
           source cron_convert.sh
@@ -23,6 +26,7 @@ jobs:
           git config user.name github-actions
           git config user.email github-actions@users.noreply.github.com
           git add .
+          git diff --cached --quiet && exit 0
           current=`TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M:%S'`
           git commit -m "[${current}] random cron trigger by ${{ github.event_name }}"
           git push origin master
