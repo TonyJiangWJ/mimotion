@@ -28,8 +28,8 @@ jobs:
           git add .
           if git diff --cached --quiet; then
             echo "No cron changes to commit"
-            exit 0
+          else
+            current=`TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M:%S'`
+            git commit -m "[${current}] random cron trigger by ${{ github.event_name }}"
+            git push origin master
           fi
-          current=`TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M:%S'`
-          git commit -m "[${current}] random cron trigger by ${{ github.event_name }}"
-          git push origin master
