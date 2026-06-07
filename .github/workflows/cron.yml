@@ -26,7 +26,10 @@ jobs:
           git config user.name github-actions
           git config user.email github-actions@users.noreply.github.com
           git add .
-          git diff --cached --quiet && exit 0
+          if git diff --cached --quiet; then
+            echo "No cron changes to commit"
+            exit 0
+          fi
           current=`TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M:%S'`
           git commit -m "[${current}] random cron trigger by ${{ github.event_name }}"
           git push origin master
