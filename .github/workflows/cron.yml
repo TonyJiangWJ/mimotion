@@ -31,5 +31,6 @@ jobs:
           else
             current=`TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M:%S'`
             git commit -m "[${current}] random cron trigger by ${{ github.event_name }}"
-            git push origin master
+            target_branch="${{ github.event.workflow_run.head_branch || github.ref_name }}"
+            git push origin "HEAD:${target_branch}"
           fi
