@@ -17,8 +17,10 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          token: ${{ github.token }}
+          token: ${{ secrets.PAT || github.token }}
       - name: random cron
+        env:
+          PAT: ${{ secrets.PAT }}
         run: |
           source cron_convert.sh
           echo "configed CRON_HOURS ${{ vars.CRON_HOURS }}"
@@ -31,5 +33,9 @@ jobs:
           else
             current=`TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M:%S'`
             git commit -m "[${current}] random cron trigger by ${{ github.event_name }}"
-            git push origin HEAD
+            if test -n "${PAT}"; then
+              git push origin HEAD
+            else
+              echo "::warning::PAT secret is not set. Skipping push because updating .github/workflows/run.yml requires workflow write permission."
+            fi
           fi
