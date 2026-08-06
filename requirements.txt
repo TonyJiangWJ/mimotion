@@ -1,0 +1,4 @@
+requests
+pytz
+pycryptodome
+python-dotenv
