@@ -245,3 +245,35 @@
   北京时间: '37 9,12,15,18,20,22 * * *'
   next exec time: UTC(14:37) 北京时间(22:37)
   ```
+
+## 本地开发
+
+复制 `.env.example` 文件为 `.env`，并在 `.env` 中填入你的配置信息
+```shell
+cp .env.example .env
+```
+**注意**：`.env` 文件已添加到 .gitignore 中，请不要推送到代码仓库中以免造成数据泄露
+
+创建 python 虚拟环境
+```shell
+python3 -m venv venv
+```
+
+激活虚拟环境
+```shell
+# Windows
+./venv/Script/Activate
+
+# Linux
+source ./venv/bin/activate
+```
+
+安装依赖
+```shell
+pip install -r requirements.txt
+```
+
+执行脚本修改步数
+```shell
+python3 main.py
+```
