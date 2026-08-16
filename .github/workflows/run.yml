@@ -29,7 +29,7 @@ jobs:
             CONFIG: ${{ secrets.CONFIG }}
             AES_KEY: ${{ secrets.AES_KEY }}
         run: |
-          pip3 install requests pytz pycryptodome
+          pip3 install -r requirements.txt
           python3 main.py
 
       - name: persist tokens

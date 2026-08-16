@@ -240,7 +240,36 @@ def renew_login_token(login_token) -> (str | None, str | None):
     return login_token, None
 
 
-def post_fake_brand_data(step, app_token, userid):
+# 查询用户在华米云端绑定的手环/手表设备ID
+def get_user_device_id(app_token, userid) -> str | None:
+    url = f"https://api-mifit-cn.huami.com/v1/device/binds.json?userid={userid}"
+    headers = {
+        "apptoken": app_token,
+        "User-Agent": "MiFit6.14.0 (M2007J1SC; Android 12; Density/2.75)"
+    }
+    try:
+        resp = requests.get(url, headers=headers, timeout=5).json()
+        items = resp.get("items", [])
+        if items:
+            # 1. 优先匹配 deviceType == 0 (手环/手表)
+            for item in items:
+                if item.get("deviceType") == 0:
+                    dev_id = item.get("deviceId") or item.get("mac")
+                    if dev_id:
+                        return str(dev_id).replace(":", "").upper()
+            # 2. 备选：按名称匹配
+            for item in items:
+                name = str(item.get("productName", "")).lower()
+                if any(k in name for k in ["band", "watch", "手环", "手表"]):
+                    dev_id = item.get("deviceId") or item.get("mac")
+                    if dev_id:
+                        return str(dev_id).replace(":", "").upper()
+    except Exception as e:
+        print(f"查询设备列表异常: {e}")
+    return None
+
+
+def post_fake_brand_data(step, app_token, userid, device_id=None):
     t = get_time()
 
     today = time.strftime("%F")
@@ -258,7 +287,11 @@ def post_fake_brand_data(step, app_token, userid):
         "Content-Type": "application/x-www-form-urlencoded"
     }
 
-    data = f'userid={userid}&last_sync_data_time=1597306380&device_type=0&last_deviceid=DA932FFFFE8816E7&data_json={data_json}'
+    target_dev_id = device_id if device_id else "DA932FFFFE8816E7"
+    if device_id:
+        data_json = str(data_json).replace("DA932FFFFE8816E7", target_dev_id)
+
+    data = f'userid={userid}&last_sync_data_time=1597306380&device_type=0&last_deviceid={target_dev_id}&data_json={data_json}'
 
     response = requests.post(url, data=data, headers=head)
     if response.status_code != 200:

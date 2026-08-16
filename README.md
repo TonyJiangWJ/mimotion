@@ -13,6 +13,14 @@
     - https://bs.yanwan.store/run4/ 验证码001或998
 - 如无法刷步数同步到支付宝等，建议重新注册一个新的。
 
+## 新注册账号使用方法
+
+由于新注册账号没有绑定过手环，会导致华米拦截向微信同步步数，此时你需要做的就是绑定一次小米1-7代任意手环即可。如果没有可以参考以下步骤：
+- 前往 `https://bs.yanwan.store/run4/` 网站执行一次步数同步
+- 该网站会自动为你账号绑定一个虚拟设备（感谢该建站大佬）
+- 你可以在你 Zepp Life 中看到这个虚拟的设备
+- 然后按照以下步骤进行配置即可成功同步了
+
 ### 如果觉得好用，请给一个免费的[star](https://github.com/TonyJiangWJ/mimotion/)吧
 
 ## Github Actions 部署指南
@@ -237,3 +245,35 @@
   北京时间: '37 9,12,15,18,20,22 * * *'
   next exec time: UTC(14:37) 北京时间(22:37)
   ```
+
+## 本地开发
+
+复制 `.env.example` 文件为 `.env`，并在 `.env` 中填入你的配置信息
+```shell
+cp .env.example .env
+```
+**注意**：`.env` 文件已添加到 .gitignore 中，请不要推送到代码仓库中以免造成数据泄露
+
+创建 python 虚拟环境
+```shell
+python3 -m venv venv
+```
+
+激活虚拟环境
+```shell
+# Windows
+./venv/Script/Activate
+
+# Linux
+source ./venv/bin/activate
+```
+
+安装依赖
+```shell
+pip install -r requirements.txt
+```
+
+执行脚本修改步数
+```shell
+python3 main.py
+```
