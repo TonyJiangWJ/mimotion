@@ -1,0 +1,16 @@
+name: Schedule Probe
+
+on:
+  schedule:
+    - cron: '27 7 * * *'
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Record scheduler time
+        run: |
+          date -u '+UTC: %Y-%m-%d %H:%M:%S'
+          TZ=Asia/Shanghai date '+Asia/Shanghai: %Y-%m-%d %H:%M:%S'
