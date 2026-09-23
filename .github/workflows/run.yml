@@ -2,7 +2,7 @@ name: 刷步数
 
 on:
   schedule:
-    - cron: '30 0,2,4,6,10,13 * * *'
+    - cron: '18 10,12,14 * * *'
   workflow_dispatch:
 
 jobs:
@@ -35,6 +35,10 @@ jobs:
       - name: persist tokens
         run: |
           git config user.name github-actions
+          git config user.email github-actions@users.noreply.github.com
+          git add .
+          git commit -m "persist tokens trigger by ${{ github.event_name }}"
+          git push origin master          git config user.name github-actions
           git config user.email github-actions@users.noreply.github.com
           git add .
           git commit -m "persist tokens trigger by ${{ github.event_name }}"
