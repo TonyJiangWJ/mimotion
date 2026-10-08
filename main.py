@@ -15,6 +15,7 @@ from util.aes_help import encrypt_data, decrypt_data
 import util.zepp_helper as zeppHelper
 import util.push_util as push_util
 
+
 # 获取默认值转int
 def get_int_value_default(_config: dict, _key, default):
     _config.setdefault(_key, default)
@@ -27,10 +28,24 @@ def get_min_max_by_time(hour=None, minute=None):
         hour = time_bj.hour
     if minute is None:
         minute = time_bj.minute
-    time_rate = min(((hour-4) * 60 + minute) / (18 * 60), 1)
+
+    # 【修复】限制 time_rate 在 [0, 1] 范围内，避免凌晨4点前出现负数
+    raw_rate = ((hour - 4) * 60 + minute) / (18 * 60)
+    time_rate = max(0.0, min(raw_rate, 1.0))
+
     min_step = get_int_value_default(config, 'MIN_STEP', 18000)
     max_step = get_int_value_default(config, 'MAX_STEP', 25000)
-    return int(time_rate * min_step), int(time_rate * max_step)
+
+    calculated_min = int(time_rate * min_step)
+    calculated_max = int(time_rate * max_step)
+
+    # 【修复】确保步数不为负，且 min <= max
+    calculated_min = max(0, calculated_min)
+    calculated_max = max(0, calculated_max)
+    if calculated_min > calculated_max:
+        calculated_min, calculated_max = calculated_max, calculated_min
+
+    return calculated_min, calculated_max
 
 
 # 虚拟ip地址
@@ -104,8 +119,6 @@ class MiMotionRunner:
         else:
             self.is_phone = False
         self.user = user
-        # self.fake_ip_addr = fake_ip()
-        # self.log_str += f"创建虚拟ip地址：{self.fake_ip_addr}\n"
 
     # 登录
     def login(self):
@@ -152,7 +165,6 @@ class MiMotionRunner:
         if access_token is None:
             self.log_str += "登录获取accessToken失败：%s" % msg
             return None
-        # print(f"device_id:{self.device_id} isPhone: {self.is_phone}")
         login_token, app_token, user_id, msg = zeppHelper.grant_login_tokens(access_token, self.device_id,
                                                                              self.is_phone)
         if login_token is None:
@@ -314,7 +326,13 @@ if __name__ == "__main__":
         if users is None or passwords is None:
             print("未正确配置账号密码，无法执行")
             exit(1)
+
         min_step, max_step = get_min_max_by_time()
+        # 【新增】配置级兜底校验，防止 MIN_STEP > MAX_STEP
+        if min_step > max_step:
+            print(f"警告: 计算后 MIN_STEP({min_step}) > MAX_STEP({max_step})，已自动交换")
+            min_step, max_step = max_step, min_step
+
         use_concurrent = config.get('USE_CONCURRENT')
         if use_concurrent is not None and use_concurrent == 'True':
             use_concurrent = True
