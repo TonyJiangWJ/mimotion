@@ -4,8 +4,6 @@ on:
     workflows: ["刷步数"]
     types:
       - completed
-  schedule:
-    - cron: '50 12,13,14,15 * * *'
   workflow_dispatch:
 
 jobs:
