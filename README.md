@@ -85,6 +85,8 @@
     "PUSH_PLUS_HOUR": "",
     "PUSH_PLUS_MAX": "30",
     "PUSH_WECHAT_WEBHOOK_KEY": "",
+    "DINGTALK_WEBHOOK_TOKEN": "",
+    "DINGTALK_SECRET": "",
     "TELEGRAM_BOT_TOKEN": "",
     "TELEGRAM_CHAT_ID": "",
     "SLEEP_GAP": "5",
@@ -102,6 +104,8 @@
   | PUSH_PLUS_HOUR          | 限制只在某个整点进行pushplus的推送，值为整数，比如设置21，则只在北京时间21点XX分执行时才进行pushplus的消息推送。如不设置或值非数字则每次执行后都会进行推送                       |
   | PUSH_WECHAT_WEBHOOK_KEY | 企业微信推送通知的key，企业微信webhook机器人推送全地址为：https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key={机器人的key}，这里配置{机器人的key} |
   | PUSH_PLUS_MAX           | 设置pushplus最大推送账号详情数，默认为30，超过30个账号将只推送概要信息：多少个成功多少个失败。因为数量太多会导致内容过长无法推送。具体最大值请自行调试                              |
+  | DINGTALK_WEBHOOK_TOKEN  | 钉钉群自定义机器人的 Webhook access_token，Webhook 全地址为：https://oapi.dingtalk.com/robot/send?access_token={access_token}，这里配置 {access_token}（也可直接填完整地址），配置后执行完成会推送 markdown 消息到群里 |
+  | DINGTALK_SECRET         | 钉钉机器人安全设置选择“加签”时必填，值为 SEC 开头的密钥；选择“自定义关键词”或“IP地址段”时留空。关键词方式需保证消息中包含所设关键词（如“刷步数”）                                    |
   | TELEGRAM_BOT_TOKEN      | 设置telegram机器人的token，同时需要配置TELEGRAM_CHAT_ID，否则不会执行推送                                                            |
   | TELEGRAM_CHAT_ID        | 设置telegram的chatId，需要同时配置TELEGRAM_BOT_TOKEN，否则无法执行推送。关于这两个值如何获取，请前往官网查看。                                        |
   | SLEEP_GAP               | 多账号执行间隔，单位秒，如果账号比较多可以设置的短一点，默认为5秒                                                                              |

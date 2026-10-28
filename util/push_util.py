@@ -1,4 +1,9 @@
+import base64
+import hashlib
+import hmac
 import json
+import time
+import urllib.parse
 
 import requests
 from datetime import datetime
@@ -24,12 +29,16 @@ class PushConfig:
                  push_plus_hour=None,
                  push_plus_max=30,
                  push_wechat_webhook_key=None,
+                 dingtalk_webhook_token=None,
+                 dingtalk_secret=None,
                  telegram_bot_token=None,
                  telegram_chat_id=None):
         self.push_plus_token = push_plus_token
         self.push_plus_hour = push_plus_hour
         self.push_plus_max = int(push_plus_max) if push_plus_max else 30
         self.push_wechat_webhook_key = push_wechat_webhook_key
+        self.dingtalk_webhook_token = dingtalk_webhook_token
+        self.dingtalk_secret = dingtalk_secret
         self.telegram_bot_token = telegram_bot_token
         self.telegram_chat_id = telegram_chat_id
 
@@ -102,6 +111,70 @@ def buildWeChatContent(title, content) -> str:
     return f"""# {title}\n{content}"""
 
 
+def build_dingtalk_sign(secret, timestamp) -> str:
+    """
+    钉钉机器人“加签”安全设置所需的签名
+    签名算法：HmacSHA256(secret, timestamp + "\\n" + secret) 后 Base64，再做 urlEncode
+    :param secret: 机器人安全设置中的加签密钥，形如 SEC开头
+    :param timestamp: 当前毫秒时间戳
+    :return: 已 urlEncode 的签名
+    """
+    string_to_sign = f"{timestamp}\n{secret}"
+    hmac_code = hmac.new(secret.encode("utf-8"), string_to_sign.encode("utf-8"), digestmod=hashlib.sha256).digest()
+    return urllib.parse.quote_plus(base64.b64encode(hmac_code))
+
+
+def push_dingtalk_webhook(token, secret, title, content):
+    """
+    推送钉钉群消息，自定义机器人 WebHook 方式，需要在钉钉群中添加自定义机器人并获取 Webhook 地址
+    官方文档：https://open.dingtalk.com/document/development/custom-bot-to-send-group-chat-messages
+
+    :param token: 机器人 Webhook 中的 access_token，也可以直接传完整的 Webhook 地址
+    :param secret: 安全设置选择“加签”时填写的密钥，选“自定义关键词”或“IP地址段”时传空即可
+    :param title: 推送标题，钉钉通知栏展示用，建议不超过 20 个字
+    :param content: 推送内容，markdown 格式，长度上限约 20000 字节
+    :return: none
+    """
+    token = (token or '').strip()
+    if token.startswith("http://") or token.startswith("https://"):
+        requestUrl = token
+    else:
+        requestUrl = f"https://oapi.dingtalk.com/robot/send?access_token={token}"
+
+    # 开启加签时，需要把 timestamp 和 sign 拼到 Webhook 地址上，且 timestamp 与签名时间相差不能超过 1 小时
+    if secret and secret.strip() != '':
+        timestamp = str(round(time.time() * 1000))
+        sign = build_dingtalk_sign(secret.strip(), timestamp)
+        separator = "&" if "?" in requestUrl else "?"
+        requestUrl = f"{requestUrl}{separator}timestamp={timestamp}&sign={sign}"
+
+    payload = {
+        "msgtype": "markdown",
+        "markdown": {
+            "title": title,
+            "text": content
+        },
+        "at": {
+            "isAtAll": False
+        }
+    }
+
+    try:
+        response = requests.post(requestUrl, json=payload)
+        if response.status_code == 200:
+            json_res = response.json()
+            if json_res.get('errcode') == 0:
+                print(f"钉钉推送完毕：{json_res.get('errmsg')}")
+            else:
+                print(f"钉钉推送失败：{json_res.get('errcode')}-{json_res.get('errmsg', '未知错误')}")
+        else:
+            print(f"钉钉推送失败: {response.status_code}")
+    except requests.exceptions.RequestException as e:
+        print(f"钉钉推送网络异常: {e}")
+    except Exception as e:
+        print(f"钉钉推送发生未知异常: {e}")
+
+
 def push_telegram_bot(bot_token, chat_id, content):
     """
     推送消息类型为html 需要在外部组装html content
@@ -141,6 +214,7 @@ def push_results(exec_results, summary, config: PushConfig):
         return
     push_to_push_plus(exec_results, summary, config)
     push_to_wechat_webhook(exec_results, summary, config)
+    push_to_dingtalk_bot(exec_results, summary, config)
     push_to_telegram_bot(exec_results, summary, config)
 
 
@@ -219,6 +293,29 @@ def push_to_wechat_webhook(exec_results, summary, config: PushConfig):
         push_wechat_webhook(config.push_wechat_webhook_key, f"{format_now()} 刷步数通知", content)
     else:
         print("未配置 WECHAT_WEBHOOK_KEY 跳过微信推送")
+
+
+def push_to_dingtalk_bot(exec_results, summary, config: PushConfig):
+    """推送到钉钉群机器人"""
+    # 判断是否需要钉钉推送
+    token = config.dingtalk_webhook_token
+    if token and token != '' and token != 'NO':
+        title = f"{format_now()} 刷步数通知"
+        content = f"### {title}\n\n{summary.strip()}\n\n"
+        if len(exec_results) >= config.push_plus_max:
+            content += '- 账号数量过多，详细情况请前往github actions中查看'
+        else:
+            lines = []
+            for exec_result in exec_results:
+                success = exec_result['success']
+                if success is not None and success is True:
+                    lines.append(f'- 账号：{exec_result["user"]} 刷步数成功，接口返回：{exec_result["msg"]}')
+                else:
+                    lines.append(f'- 账号：{exec_result["user"]} 刷步数失败，失败原因：{exec_result["msg"]}')
+            content += '\n'.join(lines)
+        push_dingtalk_webhook(token, config.dingtalk_secret, title, content)
+    else:
+        print("未配置 DINGTALK_WEBHOOK_TOKEN 跳过钉钉推送")
 
 
 def push_to_telegram_bot(exec_results, summary, config: PushConfig):
