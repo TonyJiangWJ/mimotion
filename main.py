@@ -318,6 +318,8 @@ if __name__ == "__main__":
             "PUSH_PLUS_HOUR": os.environ.get("PUSH_PLUS_HOUR", ""),
             "PUSH_PLUS_MAX": os.environ.get("PUSH_PLUS_MAX", "30"),
             "PUSH_WECHAT_WEBHOOK_KEY": os.environ.get("PUSH_WECHAT_WEBHOOK_KEY", ""),
+            "DINGTALK_WEBHOOK_TOKEN": os.environ.get("DINGTALK_WEBHOOK_TOKEN", ""),
+            "DINGTALK_SECRET": os.environ.get("DINGTALK_SECRET", ""),
             "TELEGRAM_BOT_TOKEN": os.environ.get("TELEGRAM_BOT_TOKEN", ""),
             "TELEGRAM_CHAT_ID": os.environ.get("TELEGRAM_CHAT_ID", ""),
             "SLEEP_GAP": os.environ.get("SLEEP_GAP", "5"),
@@ -334,6 +336,8 @@ if __name__ == "__main__":
         push_plus_hour=config.get('PUSH_PLUS_HOUR'),
         push_plus_max=get_int_value_default(config, 'PUSH_PLUS_MAX', 30),
         push_wechat_webhook_key=config.get('PUSH_WECHAT_WEBHOOK_KEY'),
+        dingtalk_webhook_token=config.get('DINGTALK_WEBHOOK_TOKEN'),
+        dingtalk_secret=config.get('DINGTALK_SECRET'),
         telegram_bot_token=config.get('TELEGRAM_BOT_TOKEN'),
         telegram_chat_id=config.get('TELEGRAM_CHAT_ID')
     )
