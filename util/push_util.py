@@ -117,8 +117,7 @@ def push_telegram_bot(bot_token, chat_id, content):
         "text": content,
         "parse_mode": "HTML"
     }
-    print(f"post to url: {requestUrl}")
-    print(f"payload: {json.dumps(payload)}")
+
     try:
         response = requests.post(requestUrl, json=payload)
         if response.status_code == 200:
